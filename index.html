@@ -11,6 +11,29 @@
         </div>
     </body>
 
+    <!-- component editor constraint -->
+    <script>
+        Vue.component("editor-constraint", {
+            delimiters: ['${', '}'],
+            props:['constraint'],
+            data:function()
+            {
+                return {
+
+                };
+            },
+            methods:{
+
+            },
+            template:"#TemplateEditorConstraint"
+        });
+    </script>
+    <script id="TemplateEditorConstraint" type="text/x-template">
+        <ul>
+            <li v-for="item in constraint">${item}</li>
+        </ul>
+    </script>
+
     <!-- source -->
     <script>
         Vue.component("tps-source", {
@@ -80,6 +103,10 @@
                         <option>JSON</option>
                         <option>XML</option>
                     </select>
+                </dd>
+                <dd>
+                    <strong>Component Constraint:</strong>
+                    <editor-constraint :constraint="Copy.constraint"/>
                 </dd>
                 <dd>
                     <strong>Constraint:</strong>
