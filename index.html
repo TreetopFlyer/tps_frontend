@@ -162,7 +162,18 @@
                 API:{
                     Domain:'//localhost:80',
                     RequestLog:[],
-                    Sources:[]
+                    Sources:[
+                        {
+                            "name":"dcard",
+                            "source":"client_file",
+                            "schemas":{
+                                "mapped":[{"path":"{Trans. Date}","type":"date","column_name":"Trans. Date"},{"path":"{Post Date}","type":"date","column_name":"Post Date"},{"path":"{Description}","type":"text","column_name":"Description"},{"path":"{Amount}","type":"numeric","column_name":"Amount"},{"path":"{Category}","type":"text","column_name":"Category"},{"path":"{party}","type":"text","column_name":"Party"},{"path":"{reason}","type":"text","column_name":"Reason"}],
+                                "default":[{"path":"{Trans. Date}","type":"date","column_name":"Trans. Date"},{"path":"{Post Date}","type":"date","column_name":"Post Date"},{"path":"{Description}","type":"text","column_name":"Description"},{"path":"{Amount}","type":"numeric","column_name":"Amount"},{"path":"{Category}","type":"text","column_name":"Category"}]
+                            },
+                            "constraint":["{Trans. Date}","{Post Date}","{Description}"],
+                            "loading_function":"csv"
+                        }
+                    ]
                 }
             },
             methods:{
@@ -192,7 +203,7 @@
                         }
 
                         var response = request.currentTarget.response || request.target.responseText;
-                        console.log(JSON.parse(response));
+                        console.log(response);
                         success.call(context, response);
                     };
                     xhr.send();
@@ -208,7 +219,7 @@
             },
             mounted:function()
             {
-                this.UpdateSource();
+                //this.UpdateSource();
             }
         });
     </script>
