@@ -11,27 +11,106 @@
         </div>
     </body>
 
-    <!-- component editor constraint -->
+    <!-- column -->
     <script>
-        Vue.component("editor-constraint", {
-            delimiters: ['${', '}'],
-            props:['constraint'],
-            data:function()
-            {
-                return {
-
-                };
+    Vue.component("column", {
+        delimiters: ['${', '}'],
+        props:{
+            column_name:{
+                type:String,
+                default:'Trans. Date'
             },
-            methods:{
-
+            path:{
+                type:String,
+                default:'{Trans. Date}'
             },
-            template:"#TemplateEditorConstraint"
-        });
+            type:{
+                type:String,
+                default:'text'
+            },
+            mode:{
+                type:String,
+                default:'view'
+            }
+        },
+        data:function()
+        {
+            return {
+                Internal:{
+                    column_name: this.column_name,
+                    path: this.path,
+                    type: this.type
+                }
+            }
+        },
+        template:"#TemplateColumn"
+    });
     </script>
-    <script id="TemplateEditorConstraint" type="text/x-template">
-        <ul>
-            <li v-for="item in constraint">${item}</li>
-        </ul>
+    <script id="TemplateColumn" type="text/x-template">
+        <div v-if="mode==='view'">
+            <strong>${Internal.column_name}</strong><br/>
+            <span>${Internal.path}</span><br/>
+            <em>${Internal.type}</em><br/>
+        </div>
+        <div v-else>
+            <input type="text" v-model="Internal.column_name">
+            <br/>
+            <input type="text" v-model="Internal.path">
+            <br/>
+            <select v-model="Internal.type">
+                <option disabled>${Internal.type}</option>
+                <option>date</option>
+                <option>numeric</option>
+                <option>text</option>
+            </select>
+            <br/>
+            <button v-on:click="$emit('create', Internal)" v-if="mode === 'create'">Create</button>
+            <button v-on:click="$emit('delete')" v-else>Delete</button>
+        </div>
+
+    </script>
+
+    <!-- schema -->
+    <script>
+    Vue.component("schema", {
+        delimiters: ['${', '}'],
+        props:{
+            title:{
+                type:String,
+                default:"default"
+            },
+            members:{
+                type:Array,
+                default:[]
+            }
+        },
+        methods:{
+            Create:function(inEvent)
+            {
+                this.members.push(inEvent);
+            },
+            Delete:function(inIndex)
+            {
+                this.members.splice(inIndex, 1);
+            }
+        },
+        template:"#TemplateSchema"
+    });
+    </script>
+    <script id="TemplateSchema" type="text/x-template">
+        <div>
+            <h3>${title}</h3>
+            <table>
+                <tr>
+                    <th v-for="(value, key, index) in members">
+                        <column mode="edit" v-bind="value" v-bind:key="value.column_name+value.path" v-on:delete="Delete(key)"/>
+                    </th>
+                    <th>
+                        <column title="editor" mode="create" v-on:create="Create"/>
+                    </th>
+                </tr>
+            </table>
+        </div>
     </script>
 
     <!-- source -->
@@ -94,57 +173,11 @@
             </dl>
             <dl v-show="Edit">
                 <dd><input v-model="Copy.name"/></dd>
-                
-                <dd>
-                    <strong>Loading Function:</strong>
-                    <select v-model="Copy.loading_function">
-                        <option disabled>${Copy.loading_function}</option>
-                        <option>CSV</option>
-                        <option>JSON</option>
-                        <option>XML</option>
-                    </select>
-                </dd>
-                <dd>
-                    <strong>Component Constraint:</strong>
-                    <editor-constraint :constraint="Copy.constraint"/>
-                </dd>
-                <dd>
-                    <strong>Constraint:</strong>
-                    <ul>
-                        <li v-for="(item, index) in Copy.constraint">${item} <button v-on:click="ConstraintRemove(index)">-</button></li>
-                        <li>
-                            <input type="text" v-model="Temp.Constraint"/>
-                            <button v-on:click="ConstraintAdd">+</button>
-                        </li>
-                    </ul>
-                </dd>
                 <dd>
                     <strong>Schemas:</strong>
                     <ul>
                         <li v-for="(value, key) in Copy.schemas">
-                            ${key}
-                            <table cellborder="1">
-                                <tr>
-                                    <th v-for="(sValue, sKey) in value">
-                                        <strong>${sValue.column_name}</strong><br/>
-                                        <em>${sValue.type}</em>
-                                    </th>
-                                    <th>
-                                        <input v-model="Temp.Column.column_name" type="text"/>
-                                        <select>
-                                            <option disabled>${Temp.Column.type}</option>
-                                            <option>date</option>
-                                            <option>numeric</option>
-                                            <option>text</option>
-                                        </select>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <td v-for="(sValue, sKey) in value">
-                                        ${sValue.path}
-                                    </td>
-                                </tr>
-                            </table>
+                            <schema v-bind:title="key" v-bind:members="value" />
                         </li>
                     </ul>
                 </dd>
