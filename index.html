@@ -14,7 +14,6 @@
     <!-- column -->
     <script>
     Vue.component("column", {
-        delimiters: ['${', '}'],
         props:{
             column_name:{
                 type:String,
@@ -28,44 +27,81 @@
                 type:String,
                 default:'text'
             },
-            mode:{
-                type:String,
-                default:'view'
+            Create:{
+                type:Boolean,
+                default:false
             }
         },
         data:function()
         {
             return {
-                Internal:{
-                    column_name: this.column_name,
-                    path: this.path,
-                    type: this.type
-                }
+                Internal:this.CloneFields(this),
+                Edit:false
+            }
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    column_name: inObj.column_name,
+                    path: inObj.path,
+                    type: inObj.type
+                };
+            },
+            EditStart:function()
+            {
+                this.Edit = true;
+            },
+            EditUpdate:function()
+            {
+                this.Edit = false;
+                this.$emit('update', this.CloneFields(this.Internal));
+            },
+            EditCancel:function()
+            {
+                this.Edit = false;
+            },
+            EditDelete:function()
+            {
+                this.$emit('delete');
+            },
+            EditCreate:function()
+            {
+                this.$emit('create', this.CloneFields(this.Internal));
             }
         },
         template:"#TemplateColumn"
     });
     </script>
     <script id="TemplateColumn" type="text/x-template">
-        <div v-if="mode==='view'">
-            <strong>${Internal.column_name}</strong><br/>
-            <span>${Internal.path}</span><br/>
-            <em>${Internal.type}</em><br/>
-        </div>
-        <div v-else>
-            <input type="text" v-model="Internal.column_name">
-            <br/>
-            <input type="text" v-model="Internal.path">
-            <br/>
-            <select v-model="Internal.type">
-                <option disabled>${Internal.type}</option>
-                <option>date</option>
-                <option>numeric</option>
-                <option>text</option>
-            </select>
-            <br/>
-            <button v-on:click="$emit('create', Internal)" v-if="mode === 'create'">Create</button>
-            <button v-on:click="$emit('delete')" v-else>Delete</button>
+        <div>
+            <div v-if="Edit || Create">
+                <input type="text" v-model="Internal.column_name">
+                <br/>
+                <input type="text" v-model="Internal.path">
+                <br/>
+                <select v-model="Internal.type">
+                    <option disabled>{{Internal.type}}</option>
+                    <option>date</option>
+                    <option>numeric</option>
+                    <option>text</option>
+                </select>
+                <br/>
+                <div v-if="Create">
+                    <button v-on:click="EditCreate">Create</button>
+                </div>
+                <div v-else>
+                    <button v-on:click="EditUpdate">Update</button>
+                    <button v-on:click="EditCancel">Cancel</button>
+                    <button v-on:click="EditDelete">Delete</button>
+                </div>
+            </div>
+            <div v-else>
+                <strong>{{column_name}}</strong><br/>
+                <span>{{path}}</span><br/>
+                <em>{{type}}</em><br/>
+                <button v-on:click="EditStart">Edit</button>
+            </div>
         </div>
 
     </script>
@@ -89,6 +125,10 @@
             {
                 this.members.push(inEvent);
             },
+            Update:function(inIndex, inEvent)
+            {
+                this.members.splice(inIndex, 1, inEvent);
+            },
             Delete:function(inIndex)
             {
                 this.members.splice(inIndex, 1);
@@ -102,11 +142,15 @@
             <h3>${title}</h3>
             <table>
                 <tr>
-                    <th v-for="(value, key, index) in members">
-                        <column mode="edit" v-bind="value" v-bind:key="value.column_name+value.path" v-on:delete="Delete(key)"/>
+                    <th v-for="(value, index) in members">
+                        <column
+                            v-bind="value"
+                            v-bind:key="value.column_name+value.path"
+                            v-on:delete="Delete(index)"
+                            v-on:update="Update(index, $event)"/>
                     </th>
                     <th>
-                        <column title="editor" mode="create" v-on:create="Create"/>
+                        <column create v-on:create="Create"/>
                     </th>
                 </tr>
             </table>
