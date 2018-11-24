@@ -11,6 +11,72 @@
         </div>
     </body>
 
+    <!-- editor -->
+    <script>
+    var MixinEditor = {
+        props:{
+            create:{
+                type:Boolean,
+                default:false
+            }
+        },
+        data:function()
+        {
+            return {
+                Internal:this.CloneFields(this),
+                Edit:false
+            }
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    column_name: inObj.column_name,
+                    path: inObj.path,
+                    type: inObj.type
+                };
+            },
+            EditStart:function()
+            {
+                this.Edit = true;
+                this.Internal = this.CloneFields(this);
+            },
+            EditUpdate:function()
+            {
+                this.Edit = false;
+                this.$emit('update', this.CloneFields(this.Internal));
+            },
+            EditCancel:function()
+            {
+                this.Edit = false;
+            },
+            EditDelete:function()
+            {
+                this.$emit('delete');
+            },
+            EditCreate:function()
+            {
+                this.$emit('create', this.CloneFields(this.Internal));
+            }
+        }
+    };
+
+    var MixinEditorColumn = {
+        props:['column_name', 'path', 'type'],
+        methods:{
+            CloneFields:function()
+            {
+                return {
+                    column_name: inObj.column_name,
+                    path: inObj.path,
+                    type: inObj.type
+                };
+            }
+        }
+    }
+    </script>
+        
+
     <!-- column -->
     <script>
     Vue.component("column", {
@@ -35,7 +101,7 @@
         data:function()
         {
             return {
-                Internal:this.CloneFields(this),
+                Internal:{},
                 Edit:false
             }
         },
@@ -50,6 +116,7 @@
             },
             EditStart:function()
             {
+                this.Internal = this.CloneFields(this);
                 this.Edit = true;
             },
             EditUpdate:function()
@@ -145,6 +212,7 @@
                     <th v-for="(value, index) in members">
                         <column
                             v-bind="value"
+                            v-bind:Fields="value"
                             v-bind:key="value.column_name+value.path"
                             v-on:delete="Delete(index)"
                             v-on:update="Update(index, $event)"/>
