@@ -5,8 +5,23 @@
     </head>
     <body>
         <div id="App">
-            <div v-for="source in API.Sources">
-                <tps-source :source="source"/>
+            <div class="Source" v-for="(sourceValue, sourceKey) in API.Sources">
+                <hr>
+                <edit-source v-bind="sourceValue"></edit-source>
+                <div v-for="(schemaValue, schemaKey) in sourceValue.schemas">
+                    <edit-heading v-bind="schemaValue"></edit-heading>
+                    <table>
+                        <tr>
+                            <th v-for="(columnValue, columnKey) in schemaValue.columns">
+                                <edit-column v-bind="columnValue"></edit-column>
+                            </th>
+                            <th>
+                                <edit-column create-mode/></edit-column>
+                            </th>
+                        </tr>
+                    </table>
+                </div>
+                <edit-heading create-mode/></edit-heading>
             </div>
         </div>
     </body>
@@ -55,7 +70,66 @@
             }
         }
     };
-    var MixinEditorColumn = {
+    </script>
+        
+    <!-- source -->
+    <script>
+        Vue.component("edit-source", {
+            mixins:[MixinEditor],
+            props:{
+                name:{default:'New Source'},
+                source:{default:'New source type'},
+                loading_function:{default:'json'}
+            },
+            methods:{
+                CloneFields:function(inObj)
+                {
+                    return {
+                        name: inObj.name,
+                        source: inObj.source,
+                        loading_function: inObj.loading_function
+                    };
+                }
+            },
+            template:"#TemplateSource"
+        })
+    </script>
+    <script id="TemplateSource" type="text/x-template">
+        <div class="source">
+            <div v-if="Edit || Create">
+                <input type="text" v-model="Internal.name">
+                <br/>
+                <input type="text" v-model="Internal.source">
+                <br/>
+                <select v-model="Internal.loading_function">
+                    <option disabled>{{Internal.type}}</option>
+                    <option>csv</option>
+                    <option>xml</option>
+                    <option>json</option>
+                </select>
+                <br/>
+                <div v-if="Create">
+                    <button v-on:click="EditCreate">Create</button>
+                </div>
+                <div v-else>
+                    <button v-on:click="EditUpdate">Update</button>
+                    <button v-on:click="EditCancel">Cancel</button>
+                    <button v-on:click="EditDelete">Delete</button>
+                </div>
+            </div>
+            <div v-else>
+                <strong>{{name}}</strong><br/>
+                <span>{{source}}</span><br/>
+                <em>{{loading_function}}</em><br/>
+                <button v-on:click="EditStart">Edit</button>
+            </div>
+        </div>
+    </script>
+
+    <!-- column -->
+    <script>
+    Vue.component("edit-column", {
+        mixins:[MixinEditor],
         props:{
             column_name:{default:'New Column'},
             path:{default:'{path}'},
@@ -70,33 +144,12 @@
                     type: inObj.type
                 };
             }
-        }
-    };
-    var MixinEditorHeading = {
-        props:{
-            title:{default:'New Schema'},
         },
-        methods:{
-            CloneFields:function(inObj)
-            {
-                return {
-                    title: inObj.title
-                };
-            }
-        }
-    };
-    </script>
-        
-
-    <!-- column -->
-    <script>
-    Vue.component("column", {
-        mixins:[MixinEditor, MixinEditorColumn],
         template:"#TemplateColumn"
     });
     </script>
     <script id="TemplateColumn" type="text/x-template">
-        <div>
+        <div class="column">
             <div v-if="Edit || Create">
                 <input type="text" v-model="Internal.column_name">
                 <br/>
@@ -127,18 +180,28 @@
         </div>
     </script>
     
-    
-    <!-- header -->
+    <!-- heading -->
     <script>
-    Vue.component("heading", {
-        mixins:[MixinEditor, MixinEditorHeading],
+    Vue.component("edit-heading", {
+        mixins:[MixinEditor],
+        props:{
+            name:{default:'New Schema'},
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    name: inObj.name
+                };
+            }
+        },
         template:"#TemplateHeading"
     });
     </script>
     <script id="TemplateHeading" type="text/x-template">
-        <div>
+        <div class="heading">
             <div v-if="Edit || Create">
-                <input type="text" v-model="Internal.title">
+                <input type="text" v-model="Internal.name">
                 <br/>
                 <div v-if="Create">
                     <button v-on:click="EditCreate">Create</button>
@@ -150,141 +213,15 @@
                 </div>
             </div>
             <div v-else>
-                <strong>{{title}}</strong><br/>
+                <strong>{{name}}</strong><br/>
                 <button v-on:click="EditStart">Edit</button>
             </div>
-        </div>
-    </script>
-    
-    
-    <!-- schema -->
-    <script>
-    Vue.component("schema", {
-        delimiters: ['${', '}'],
-        props:{
-            title:{
-                type:String,
-                default:"default"
-            },
-            members:{
-                type:Array,
-                default:[]
-            }
-        },
-        methods:{
-            ColumnCreate:function(inEvent)
-            {
-                this.members.push(inEvent);
-            },
-            ColumnUpdate:function(inIndex, inEvent)
-            {
-                this.members.splice(inIndex, 1, inEvent);
-            },
-            ColumnDelete:function(inIndex)
-            {
-                this.members.splice(inIndex, 1);
-            }
-        },
-        template:"#TemplateSchema"
-    });
-    </script>
-    <script id="TemplateSchema" type="text/x-template">
-        <div>
-            <heading v-bind:title="title"></heading>
-            <table>
-                <tr>
-                    <th v-for="(value, index) in members">
-                        <column
-                            v-bind="value"
-                            v-bind:key="value.column_name+value.path"
-                            v-on:delete="ColumnDelete(index)"
-                            v-on:update="ColumnUpdate(index, $event)"/>
-                    </th>
-                    <th>
-                        <column createMode v-on:create="ColumnCreate"/>
-                    </th>
-                </tr>
-            </table>
-        </div>
-    </script>
-
-    <!-- source -->
-    <script>
-        Vue.component("tps-source", {
-            delimiters: ['${', '}'],
-            props:['source'],
-            data: function()
-            {
-                return {
-                    Edit:false,
-                    Copy:{},
-                    Temp:{
-                        Constraint:'',
-                        Column:{column_name:'Trans. Date', path:'{Trans. Date}', type:'date'}
-                    }
-                };
-            },
-            methods:
-            {
-                EditStart: function()
-                {
-                    this.Edit = true;
-                    this.Copy = JSON.parse(JSON.stringify(this.source));
-                },
-                EditCancel: function()
-                {
-                    this.Edit = false;
-                },
-                ConstraintRemove: function(inIndex)
-                {
-                    this.Copy.constraint.splice(inIndex, 1);
-                },
-                ConstraintAdd: function()
-                {
-                    this.Copy.constraint.push(this.Temp.Constraint);
-                    this.Temp.Constraint = '';
-                }
-            },
-            computed:
-            {
-
-            },
-            mounted:function()
-            {
-
-            },
-            template:"#TemplateSource"
-        });
-    </script>
-    <script id="TemplateSource" type="text/x-template">
-        <div class="Source">
-            <dl v-show="!Edit">
-                <dt v-html="source.name"></dt>
-                <dd><strong>Loading Function: </strong><span v-html="source.loading_function"></span></dd>
-                <dd><strong>Source: </strong><span v-html="source.source"></span></dd>
-                <dd><strong>Contsraints: </strong><span v-html="source.constraint.join(' ')"></span></dd>
-                <dd><strong>Schemas: </strong><span v-html=""></span></dd>
-                <dd><button v-on:click="EditStart">Edit</button></dd>
-            </dl>
-            <dl v-show="Edit">
-                <dd><input v-model="Copy.name"/></dd>
-                <dd>
-                    <strong>Schemas:</strong>
-                    <ul>
-                        <li v-for="(value, key) in Copy.schemas">
-                            <schema v-bind:title="key" v-bind:members="value" />
-                        </li>
-                    </ul>
-                </dd>
-                <dd><button v-on:click="EditCancel">Cancel</button></dd>
-            </dl>
         </div>
     </script>
 
     <!-- application -->
     <script>
         var App = new Vue({
-            delimiters: ['${', '}'],
             el:"#App",
             data:{
                 API:{
@@ -292,14 +229,22 @@
                     RequestLog:[],
                     Sources:[
                         {
-                            "name":"dcard",
-                            "source":"client_file",
-                            "schemas":{
-                                "mapped":[{"path":"{Trans. Date}","type":"date","column_name":"Trans. Date"},{"path":"{Post Date}","type":"date","column_name":"Post Date"},{"path":"{Description}","type":"text","column_name":"Description"},{"path":"{Amount}","type":"numeric","column_name":"Amount"},{"path":"{Category}","type":"text","column_name":"Category"},{"path":"{party}","type":"text","column_name":"Party"},{"path":"{reason}","type":"text","column_name":"Reason"}],
-                                "default":[{"path":"{Trans. Date}","type":"date","column_name":"Trans. Date"},{"path":"{Post Date}","type":"date","column_name":"Post Date"},{"path":"{Description}","type":"text","column_name":"Description"},{"path":"{Amount}","type":"numeric","column_name":"Amount"},{"path":"{Category}","type":"text","column_name":"Category"}]
-                            },
-                            "constraint":["{Trans. Date}","{Post Date}","{Description}"],
-                            "loading_function":"csv"
+                            name:"dcard",
+                            source:"client_file",
+                            loading_function:"csv",
+                            contraint:["{Trans. Date}","{Post Date}","{Description}"],
+                            schemas:[
+                                {
+                                    name:"mapped",
+                                    columns:[
+                                        {
+                                            name:"Trans. Date",
+                                            path:"{Trans.Date}",
+                                            type:"date"
+                                        }
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 }
@@ -343,7 +288,20 @@
                     {
                         this.API.Sources = JSON.parse(inResponse).source_list;
                     });
-                }
+                },
+                
+                HeadingCreate:function(inIndex, inValue)
+                {
+                    this.API.Sources
+                },
+                HeadingUpdate:function(inIndex, inValue)
+                {
+                    console.log(inIndex, inValue);
+                },
+                HeadingDelete:function(inIndex, inValue){},
+                ColumnCreate:function(){},
+                ColumnUpdate:function(){},
+                ColumnDelete:function(){}
             },
             mounted:function()
             {
