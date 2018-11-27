@@ -5,244 +5,49 @@
     </head>
     <body>
         <div id="App">
-            <div class="Source" v-for="(sourceValue, sourceKey) in API.Sources">
-                <hr>
-                <edit-source v-bind="sourceValue"></edit-source>
-                <div v-for="(schemaValue, schemaKey) in sourceValue.schemas">
-                    <edit-heading v-bind="schemaValue"></edit-heading>
-                    <table>
-                        <tr>
-                            <th v-for="(columnValue, columnKey) in schemaValue.columns">
-                                <edit-column v-bind="columnValue"></edit-column>
-                            </th>
-                            <th>
-                                <edit-column create-mode/></edit-column>
-                            </th>
-                        </tr>
-                    </table>
-                </div>
-                <edit-heading create-mode/></edit-heading>
+            <div v-for="(source, key) in Sources">
+                <tps-source v-bind="source"></tps-source>
             </div>
+            <button v-on:click="Sources.push(SourceDefaults())">Add Source</button>
         </div>
     </body>
-
-    <!-- editor -->
-    <script>
-    var MixinEditor = {
-        props:{
-            createMode:{type:Boolean, default:false},
-            editMode:{type:Boolean, default:false}
-        },
-        data:function()
-        {
-            return {
-                Internal:this.CloneFields(this),
-                Edit:this.editMode,
-                Create:this.createMode
-            }
-        },
-        methods:{
-            CloneFields:function(inObj)
-            {
-                return {};
-            },
-            EditStart:function()
-            {
-                this.Edit = true;
-                this.Internal = this.CloneFields(this);
-            },
-            EditUpdate:function()
-            {
-                this.Edit = false;
-                this.$emit('update', this.CloneFields(this.Internal));
-            },
-            EditCancel:function()
-            {
-                this.Edit = false;
-            },
-            EditDelete:function()
-            {
-                this.$emit('delete');
-            },
-            EditCreate:function()
-            {
-                this.$emit('create', this.CloneFields(this.Internal));
-            }
-        }
-    };
-    </script>
-        
-    <!-- source -->
-    <script>
-        Vue.component("edit-source", {
-            mixins:[MixinEditor],
-            props:{
-                name:{default:'New Source'},
-                source:{default:'New source type'},
-                loading_function:{default:'json'}
-            },
-            methods:{
-                CloneFields:function(inObj)
-                {
-                    return {
-                        name: inObj.name,
-                        source: inObj.source,
-                        loading_function: inObj.loading_function
-                    };
-                }
-            },
-            template:"#TemplateSource"
-        })
-    </script>
-    <script id="TemplateSource" type="text/x-template">
-        <div class="source">
-            <div v-if="Edit || Create">
-                <input type="text" v-model="Internal.name">
-                <br/>
-                <input type="text" v-model="Internal.source">
-                <br/>
-                <select v-model="Internal.loading_function">
-                    <option disabled>{{Internal.type}}</option>
-                    <option>csv</option>
-                    <option>xml</option>
-                    <option>json</option>
-                </select>
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{name}}</strong><br/>
-                <span>{{source}}</span><br/>
-                <em>{{loading_function}}</em><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
-    </script>
-
-    <!-- column -->
-    <script>
-    Vue.component("edit-column", {
-        mixins:[MixinEditor],
-        props:{
-            column_name:{default:'New Column'},
-            path:{default:'{path}'},
-            type:{default:'text'}
-        },
-        methods:{
-            CloneFields:function(inObj)
-            {
-                return {
-                    column_name: inObj.column_name,
-                    path: inObj.path,
-                    type: inObj.type
-                };
-            }
-        },
-        template:"#TemplateColumn"
-    });
-    </script>
-    <script id="TemplateColumn" type="text/x-template">
-        <div class="column">
-            <div v-if="Edit || Create">
-                <input type="text" v-model="Internal.column_name">
-                <br/>
-                <input type="text" v-model="Internal.path">
-                <br/>
-                <select v-model="Internal.type">
-                    <option disabled>{{Internal.type}}</option>
-                    <option>date</option>
-                    <option>numeric</option>
-                    <option>text</option>
-                </select>
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{column_name}}</strong><br/>
-                <span>{{path}}</span><br/>
-                <em>{{type}}</em><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
-    </script>
-    
-    <!-- heading -->
-    <script>
-    Vue.component("edit-heading", {
-        mixins:[MixinEditor],
-        props:{
-            name:{default:'New Schema'},
-        },
-        methods:{
-            CloneFields:function(inObj)
-            {
-                return {
-                    name: inObj.name
-                };
-            }
-        },
-        template:"#TemplateHeading"
-    });
-    </script>
-    <script id="TemplateHeading" type="text/x-template">
-        <div class="heading">
-            <div v-if="Edit || Create">
-                <input type="text" v-model="Internal.name">
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{name}}</strong><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
-    </script>
 
     <!-- application -->
     <script>
         var App = new Vue({
             el:"#App",
             data:{
-                API:{
-                    Domain:'//localhost:80',
-                    RequestLog:[],
-                    Sources:[
+                Sources:
+                [{
+                    name:"dcard",
+                    source:"client_file",
+                    loading_function:"csv",
+                    constraint:["{Trans. Date}","{Post Date}","{Description}"],
+                    schemas:
+                    [{
+                        name:"mapped",
+                        columns:
+                        [{
+                            name:"Trans. Date",
+                            path:"{Trans.Date}",
+                            type:"date"
+                        }]
+                    }]
+                }],
+                Default:
+                {
+                    name:"New Source",
+                    source:"(add file origin)",
+                    loading_function:"csv",
+                    constraint:["{}"],
+                    schemas:[
                         {
-                            name:"dcard",
-                            source:"client_file",
-                            loading_function:"csv",
-                            contraint:["{Trans. Date}","{Post Date}","{Description}"],
-                            schemas:[
+                            name:"New Schema",
+                            columns:[
                                 {
-                                    name:"mapped",
-                                    columns:[
-                                        {
-                                            name:"Trans. Date",
-                                            path:"{Trans.Date}",
-                                            type:"date"
-                                        }
-                                    ]
+                                    name:"New Column",
+                                    path:"{}",
+                                    type:"text"
                                 }
                             ]
                         }
@@ -250,63 +55,50 @@
                 }
             },
             methods:{
-                CORS: function(message, url, verb, success)
+                //////////////////////////////
+                ConstraintDefaults:function()
                 {
-                    var context = this;
-                    var log = {
-                        ID:Math.random(),
-                        Message:message
-                    };
-                    context.API.RequestLog.push(log);
 
-                    var xhr = new XMLHttpRequest();
-                    if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
-                    xhr.open(verb, url);
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.onload = function(request){
-                        
-                        var i;
-                        for(i=0; i<context.API.RequestLog.length; i++)
-                        {
-                            if(context.API.RequestLog[i].ID == log.ID)
-                            {
-                                context.API.RequestLog.splice(i, 1);
-                            }
-                        }
+                },
+                ConstraintCreate:function()
+                {
 
-                        var response = request.currentTarget.response || request.target.responseText;
-                        console.log(response);
-                        success.call(context, response);
-                    };
-                    xhr.send();
-                    return xhr;
                 },
-                UpdateSource: function()
+
+                //////////////////////////////
+                SchemaCreate:function()
                 {
-                    this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
-                    {
-                        this.API.Sources = JSON.parse(inResponse).source_list;
-                    });
+
                 },
-                
-                HeadingCreate:function(inIndex, inValue)
+
+                //////////////////////////////
+                ColumnCreate:function()
                 {
-                    this.API.Sources
-                },
-                HeadingUpdate:function(inIndex, inValue)
-                {
-                    console.log(inIndex, inValue);
-                },
-                HeadingDelete:function(inIndex, inValue){},
-                ColumnCreate:function(){},
-                ColumnUpdate:function(){},
-                ColumnDelete:function(){}
-            },
-            mounted:function()
-            {
-                //this.UpdateSource();
+
+                }
             }
         });
     </script>
+    <script>
+        Vue.component("tps-source", {
+            props:{
+                name:{type:String, default:"New Source"},
+                source:{type:String, default:"(file origin)"},
+                loading_function:{type:String, default:"JSON"},
+                constraint:{type:Array},
+                schemas:{type:Array}
+            },
+            methods:{},
+            template:"#tps-source"
+        });
+    </script>
+    <script id="tps-source" type="text/x-template">
+        <div>
+            <h2>Source</h2>
+            {{name}}<br>
+            {{source}}<br>
+            {{loading_function}}<br>
+        </div>
+    </script>
+
 </html>
