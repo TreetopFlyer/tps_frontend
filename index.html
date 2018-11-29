@@ -5,12 +5,36 @@
     </head>
     <body>
         <div id="App">
-            <tps-source v-for="(source, key) in Sources" v-bind="source"></tps-source>
+            <tps-source
+            v-for="(source, key) in Sources"
+            v-bind="source"
+            v-bind:mode="mode"
+            ></tps-source>
             <button v-on:click="Sources.push(SourceDefaults())">Add Source</button>
         </div>
     </body>
     <script>
+        var MixinEditor = {
+            props:{
+                mode:{
+                    type:String,
+                    default:"view",
+                    validator: function (value)
+                    {
+                        return ['create', 'edit', 'view'].indexOf(value) !== -1;
+                    }
+                }
+            },
+            computed:{
+                ModeEdit:function(){return this.mode != "view";},
+                ModeCreate:function(){return this.mode == "create";},
+                ModeView:function(){return this.mode == "view";}
+            }
+        };
+    </script>
+    <script>
         Vue.component("tps-source", {
+            mixins:[MixinEditor],
             props:{
                 name:{type:String, default:"New Source"},
                 source:{type:String, default:"(file origin)"},
@@ -31,20 +55,30 @@
                     }
                 }
             },
-            mounted:function()
-            {
-                console.log(this.props);
-            },
             template:"#tps-source"
         });
     </script>
     <script id="tps-source" type="text/x-template">
         <div>
             <h2>Source</h2>
-            <input type="text" v-model="this.clone.name">
-            {{name}}<br>
-            {{source}}<br>
-            {{loading_function}}<br>
+            <div v-if="ModeView">
+                {{name}}<br>
+                {{source}}<br>
+                {{loading_function}}<br>
+                <button v-on:click="ModeEdit = true">Edit</button>
+            </div>
+            <div v-else>
+                <input type="text" v-model="Edited.name"/>
+                <input type="text" v-model="Edited.source"/>
+                <input type="text" v-model="Edited.loading_function"/>
+                <div v-if="ModeCreate">
+                    <button v-on:click="$emit('create', Edited)">Add</button>
+                </div>
+                <div v-else="ModeEdit">
+                    <button v-on:click="$emit('update', Edited)">Save</button>
+                    <button v-on:click="$emit('delete', Edited)">Delete</button>
+                </div>
+            </div>
         </div>
     </script>
 
@@ -68,6 +102,7 @@
         var App = new Vue({
             el:"#App",
             data:{
+                mode:"view",
                 Sources:
                 [{
                     name:"dcard",
