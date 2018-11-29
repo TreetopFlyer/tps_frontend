@@ -5,15 +5,66 @@
     </head>
     <body>
         <div id="App">
-            <div v-for="(source, key) in Sources">
-                <tps-source v-bind="source"></tps-source>
-            </div>
+            <tps-source v-for="(source, key) in Sources" v-bind="source"></tps-source>
             <button v-on:click="Sources.push(SourceDefaults())">Add Source</button>
         </div>
     </body>
+    <script>
+        Vue.component("tps-source", {
+            props:{
+                name:{type:String, default:"New Source"},
+                source:{type:String, default:"(file origin)"},
+                loading_function:{type:String, default:"JSON"},
+                constraint:{type:Array},
+                schemas:{type:Array}
+            },
+            methods:{},
+            computed:{
+                Edited: function()
+                {
+                    return {
+                        name:this.name,
+                        source:this.source,
+                        loading_function:this.loading_function,
+                        constraint:this.constraint,
+                        schemas:this.schemas,
+                    }
+                }
+            },
+            mounted:function()
+            {
+                console.log(this.props);
+            },
+            template:"#tps-source"
+        });
+    </script>
+    <script id="tps-source" type="text/x-template">
+        <div>
+            <h2>Source</h2>
+            <input type="text" v-model="this.clone.name">
+            {{name}}<br>
+            {{source}}<br>
+            {{loading_function}}<br>
+        </div>
+    </script>
 
+
+
+    <script>
+        Vue.component("tps-constraint", {
+            props:{
+                accessor:{type:String, default:"{}"}
+            },
+            template:"tps-constraint"
+        })
+    </script>
+    <script id="tps-constraint" type="text/x-template">
+        <div>{{accessor}}</div>
+    </script>
+    
     <!-- application -->
     <script>
+
         var App = new Vue({
             el:"#App",
             data:{
@@ -55,50 +106,7 @@
                 }
             },
             methods:{
-                //////////////////////////////
-                ConstraintDefaults:function()
-                {
-
-                },
-                ConstraintCreate:function()
-                {
-
-                },
-
-                //////////////////////////////
-                SchemaCreate:function()
-                {
-
-                },
-
-                //////////////////////////////
-                ColumnCreate:function()
-                {
-
-                }
             }
         });
     </script>
-    <script>
-        Vue.component("tps-source", {
-            props:{
-                name:{type:String, default:"New Source"},
-                source:{type:String, default:"(file origin)"},
-                loading_function:{type:String, default:"JSON"},
-                constraint:{type:Array},
-                schemas:{type:Array}
-            },
-            methods:{},
-            template:"#tps-source"
-        });
-    </script>
-    <script id="tps-source" type="text/x-template">
-        <div>
-            <h2>Source</h2>
-            {{name}}<br>
-            {{source}}<br>
-            {{loading_function}}<br>
-        </div>
-    </script>
-
 </html>
