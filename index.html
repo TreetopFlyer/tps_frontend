@@ -3,6 +3,7 @@
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
         <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+        <link href="icomoon/font.css" rel="stylesheet">
         <style>
             *
             {
@@ -16,6 +17,10 @@
             body
             {
                 margin:0;
+            }
+            button
+            {
+                border-radius:5px;
             }
             th
             {
@@ -73,7 +78,7 @@
                                 v-bind="sourceValue"
                                 v-on:update="   MemberUpdate(API.Sources, sourceKey, $event)"
                                 v-on:delete="   MemberDelete(API.Sources, sourceKey)"
-                                v-on:duplicate="MemberInsert(API.Sources, sourceKey, $event)">
+                                v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
                             </edit-source>
             
                             <h3>Constriant:</h3>
@@ -90,7 +95,7 @@
                                             v-bind:accessor="constraintValue"
                                             v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
                                             v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
-                                            v-on:duplicate="MemberInsert(sourceValue.constraint, constraintKey, $event.accessor)">
+                                            v-on:duplicate="MemberDuplicate(sourceValue.constraint, constraintKey)">
                                         </edit-constraint>
                                     </th>
                                 </tr>
@@ -110,7 +115,7 @@
                                             v-bind="schemaValue"
                                             v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
                                             v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
-                                            v-on:duplicate="MemberInsert(sourceValue.schemas, schemaKey, $event)">
+                                            v-on:duplicate="MemberDuplicate(sourceValue.schemas, schemaKey)">
                                         </edit-schema>
                                         <h4>Columns:</h4>
                                         <div class="Frame Column New">
@@ -124,7 +129,7 @@
                                                 v-bind="columnValue"
                                                 v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
                                                 v-on:delete="MemberDelete(schemaValue.columns, columnKey)"
-                                                v-on:duplicate="MemberInsert(schemaValue.columns, columnKey, $event)">
+                                                v-on:duplicate="MemberDuplicate(schemaValue.columns, columnKey)">
                                             </edit-column>
                                         </div>
                                     </th>
@@ -182,8 +187,7 @@
             },
             EditDuplicate:function()
             {
-                this.Internal = this.CloneFields(this);
-                this.$emit('duplicate', this.CloneFields(this.Internal));
+                this.$emit('duplicate');
             }
         }
     };
@@ -202,18 +206,18 @@
             <div v-if="create || edit">
                 <slot name="write"></slot>
                 <div v-if="create">
-                    <button v-on:click="$emit('create')">Create</button>
+                    <button v-on:click="$emit('create')"><i class="icon icon-plus-circle"></i> Create</button>
                 </div>
                 <div v-else>
-                    <button v-on:click="$emit('update')">Update</button>
-                    <button v-on:click="$emit('cancel')">Cancel</button>
+                    <button v-on:click="$emit('update')"><i class="icon icon-save"></i> Update</button>
+                    <button v-on:click="$emit('cancel')"><i class="icon icon-slash"></i> Cancel</button>
                 </div>
             </div>
             <div v-else>
                 <slot name="read"></slot>
-                <button v-on:click="$emit('edit')">Edit</button>
-                <button v-on:click="$emit('duplicate')">Duplicate</button>
-                <button v-on:click="$emit('delete')">Delete</button>
+                <button v-on:click="$emit('edit')"><i class="icon icon-edit"></i> Edit</button>
+                <button v-on:click="$emit('duplicate')"><i class="icon icon-copy"></i> Duplicate</button>
+                <button v-on:click="$emit('delete')"><i class="icon icon-trash-2"></i> Delete</button>
             </div>
         </div>
     </script>
@@ -488,6 +492,12 @@
                 MemberInsert:function(inArray, inIndex, inValue)
                 {
                     inArray.splice(inIndex, 0, inValue);
+                },
+                MemberDuplicate:function(inArray, inIndex)
+                {
+                    var clone;
+                    clone = JSON.parse(JSON.stringify( inArray[inIndex] ));
+                    inArray.splice(inIndex, 0, clone);
                 },
                 MemberDelete:function(inArray, inIndex)
                 {
