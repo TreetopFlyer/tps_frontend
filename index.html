@@ -2,31 +2,61 @@
 <html>
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
+        <style>
+        .Frame
+        {
+            border:1px solid #aaa;
+            padding:10px;
+        }
+        </style>
     </head>
     <body>
         <div id="App">
-            <div class="Source" v-for="(sourceValue, sourceKey) in API.Sources">
-                <hr>
-                <edit-source v-bind="sourceValue"></edit-source>
-                <div v-for="(schemaValue, schemaKey) in sourceValue.schemas">
-                    <edit-heading v-bind="schemaValue"></edit-heading>
+            <div class="Frame Source" v-for="(sourceValue, sourceKey) in API.Sources">
+                <edit-source
+                    v-bind="sourceValue"
+                    v-on:update="MemberUpdate(API.Sources, sourceKey, $event)"
+                    v-on:delete="MemberDelete(API.Sources, sourceKey, $event)">
+                </edit-source>
+                <div class="Frame Schema" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
+                    {{schemaKey}}
+                    <edit-schema
+                        v-bind="schemaValue"
+                        v-on:update="MemberUpdate(sourceValue.schemas, schemaKey, $event)"
+                        v-on:delete="MemberDelete(sourceValue.schemas, schemaKey, $event)">
+                    </edit-schema>
                     <table>
                         <tr>
-                            <th v-for="(columnValue, columnKey) in schemaValue.columns">
-                                <edit-column v-bind="columnValue"></edit-column>
-                            </th>
                             <th>
-                                <edit-column create-mode/></edit-column>
+                                <edit-column
+                                    create-mode
+                                    v-on:create="MemberCreate(schemaValue.columns, $event)">
+                                </edit-column>
+                            </th>
+                            <th v-for="(columnValue, columnKey) in schemaValue.columns">
+                                {{columnKey}}
+                                <edit-column
+                                    v-bind="columnValue"
+                                    v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
+                                    v-on:delete="MemberDelete(schemaValue.columns, columnKey, $event)">
+                                </edit-column>
                             </th>
                         </tr>
                     </table>
                 </div>
-                <edit-heading create-mode/></edit-heading>
+                <edit-schema
+                    create-mode
+                    v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
+                </edit-schema>
             </div>
+            <edit-source
+                create-mode
+                v-on:create="MemberCreate(API.Sources, $event)">
+            </edit-source>
         </div>
     </body>
 
-    <!-- editor -->
+    <!-- base editor -->
     <script>
     var MixinEditor = {
         props:{
@@ -79,7 +109,9 @@
             props:{
                 name:{default:'New Source'},
                 source:{default:'New source type'},
-                loading_function:{default:'json'}
+                loading_function:{default:'json'},
+                constraint:{type:Array},
+                schemas:{type:Array}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -126,63 +158,9 @@
         </div>
     </script>
 
-    <!-- column -->
+    <!-- schema -->
     <script>
-    Vue.component("edit-column", {
-        mixins:[MixinEditor],
-        props:{
-            column_name:{default:'New Column'},
-            path:{default:'{path}'},
-            type:{default:'text'}
-        },
-        methods:{
-            CloneFields:function(inObj)
-            {
-                return {
-                    column_name: inObj.column_name,
-                    path: inObj.path,
-                    type: inObj.type
-                };
-            }
-        },
-        template:"#TemplateColumn"
-    });
-    </script>
-    <script id="TemplateColumn" type="text/x-template">
-        <div class="column">
-            <div v-if="Edit || Create">
-                <input type="text" v-model="Internal.column_name">
-                <br/>
-                <input type="text" v-model="Internal.path">
-                <br/>
-                <select v-model="Internal.type">
-                    <option disabled>{{Internal.type}}</option>
-                    <option>date</option>
-                    <option>numeric</option>
-                    <option>text</option>
-                </select>
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{column_name}}</strong><br/>
-                <span>{{path}}</span><br/>
-                <em>{{type}}</em><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
-    </script>
-    
-    <!-- heading -->
-    <script>
-    Vue.component("edit-heading", {
+    Vue.component("edit-schema", {
         mixins:[MixinEditor],
         props:{
             name:{default:'New Schema'},
@@ -214,6 +192,60 @@
             </div>
             <div v-else>
                 <strong>{{name}}</strong><br/>
+                <button v-on:click="EditStart">Edit</button>
+            </div>
+        </div>
+    </script>
+
+    <!-- column -->
+    <script>
+    Vue.component("edit-column", {
+        mixins:[MixinEditor],
+        props:{
+            name:{default:'New Column'},
+            path:{default:'{path}'},
+            type:{default:'text'}
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    name: inObj.name,
+                    path: inObj.path,
+                    type: inObj.type
+                };
+            }
+        },
+        template:"#TemplateColumn"
+    });
+    </script>
+    <script id="TemplateColumn" type="text/x-template">
+        <div class="column">
+            <div v-if="Edit || Create">
+                <input type="text" v-model="Internal.name">
+                <br/>
+                <input type="text" v-model="Internal.path">
+                <br/>
+                <select v-model="Internal.type">
+                    <option disabled>{{Internal.type}}</option>
+                    <option>date</option>
+                    <option>numeric</option>
+                    <option>text</option>
+                </select>
+                <br/>
+                <div v-if="Create">
+                    <button v-on:click="EditCreate">Create</button>
+                </div>
+                <div v-else>
+                    <button v-on:click="EditUpdate">Update</button>
+                    <button v-on:click="EditCancel">Cancel</button>
+                    <button v-on:click="EditDelete">Delete</button>
+                </div>
+            </div>
+            <div v-else>
+                <strong>{{name}}</strong><br/>
+                <span>{{path}}</span><br/>
+                <em>{{type}}</em><br/>
                 <button v-on:click="EditStart">Edit</button>
             </div>
         </div>
@@ -289,19 +321,20 @@
                         this.API.Sources = JSON.parse(inResponse).source_list;
                     });
                 },
-                
-                HeadingCreate:function(inIndex, inValue)
+                ///////////////
+                MemberCreate:function(inArray, inValue)
                 {
-                    this.API.Sources
+                    console.log("add called", inArray, inValue);
+                    inArray.push(inValue);
                 },
-                HeadingUpdate:function(inIndex, inValue)
+                MemberUpdate:function(inArray, inIndex, inValue)
                 {
-                    console.log(inIndex, inValue);
+                    inArray.splice(inIndex, 1, inValue);
                 },
-                HeadingDelete:function(inIndex, inValue){},
-                ColumnCreate:function(){},
-                ColumnUpdate:function(){},
-                ColumnDelete:function(){}
+                MemberDelete:function(inArray, inIndex)
+                {
+                    inArray.splice(inIndex, 1);
+                }
             },
             mounted:function()
             {
