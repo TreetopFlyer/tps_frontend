@@ -7,6 +7,10 @@
             *
             {
                 position:relative;
+                font-family:Roboto, sans-serif;
+            }
+            h1, h2, h3, h4, h5, h6
+            {
                 font-family:Open Sans, sans-serif;
             }
             body
@@ -67,8 +71,9 @@
                         <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
                             <edit-source
                                 v-bind="sourceValue"
-                                v-on:update="MemberUpdate(API.Sources, sourceKey, $event)"
-                                v-on:delete="MemberDelete(API.Sources, sourceKey)">
+                                v-on:update="   MemberUpdate(API.Sources, sourceKey, $event)"
+                                v-on:delete="   MemberDelete(API.Sources, sourceKey)"
+                                v-on:duplicate="MemberInsert(API.Sources, sourceKey, $event)">
                             </edit-source>
             
                             <h3>Constriant:</h3>
@@ -77,14 +82,15 @@
                                     <th class="Frame Constraint New">
                                         <edit-constraint
                                             create-mode
-                                            v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
+                                            v-on:create="MemberInsert(sourceValue.constraint, 0, $event.accessor)">
                                         </edit-constraint>
                                     </th>
                                     <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
                                         <edit-constraint
                                             v-bind:accessor="constraintValue"
-                                            v-on:update="MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
-                                            v-on:delete="MemberDelete(sourceValue.constraint, constraintKey)">
+                                            v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
+                                            v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
+                                            v-on:duplicate="MemberInsert(sourceValue.constraint, constraintKey, $event.accessor)">
                                         </edit-constraint>
                                     </th>
                                 </tr>
@@ -171,15 +177,20 @@
             EditCreate:function()
             {
                 this.$emit('create', this.CloneFields(this.Internal));
+            },
+            EditDuplicate:function()
+            {
+                this.$emit('duplicate', this.CloneFields(this.Internal));
             }
         }
     };
     </script>
-    
-    <!-- base editor layout -->
     <script>
     Vue.component("edit-editor", {
-        props:["create", "edit"],
+        props:{
+            create:{default: false},
+            edit:{default: false}
+        },
         template:"#TemplateBaseEditor"
     });
     </script>
@@ -188,17 +199,18 @@
             <div v-if="create || edit">
                 <slot name="write"></slot>
                 <div v-if="create">
-                    <button v-on:click="EditCreate">Create</button>
+                    <button v-on:click="$emit('create')">Create</button>
                 </div>
                 <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
+                    <button v-on:click="$emit('update')">Update</button>
+                    <button v-on:click="$emit('cancel')">Cancel</button>
                 </div>
             </div>
             <div v-else>
                 <slot name="read"></slot>
-                <button v-on:click="EditStart">Edit</button>
+                <button v-on:click="$emit('edit')">Edit</button>
+                <button v-on:click="$emit('duplicate')">Duplicate</button>
+                <button v-on:click="$emit('delete')">Delete</button>
             </div>
         </div>
     </script>
@@ -230,35 +242,34 @@
         })
     </script>
     <script id="TemplateSource" type="text/x-template">
-        <div>
-            <div v-if="Edit || Create">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
+                <label>Name:</label>
                 <input type="text" v-model="Internal.name">
                 <br/>
+                <label>Source:</label>
                 <input type="text" v-model="Internal.source">
                 <br/>
+                <label>Loading Function:</label>
                 <select v-model="Internal.loading_function">
                     <option disabled>{{Internal.type}}</option>
                     <option>csv</option>
                     <option>xml</option>
                     <option>json</option>
                 </select>
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{name}}</strong><br/>
-                <span>{{source}}</span><br/>
-                <em>{{loading_function}}</em><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
+            </template>
+            <template slot="read">
+                <strong>{{name}}</strong> | {{source}} | {{loading_function}}
+            </template>
+        </edit-editor>
     </script>
 
     <!-- constraint -->
@@ -280,11 +291,19 @@
         })
     </script>
     <script id="TemplateConstraint" type="text/x-template">
-        <edit-editor v-bind:create="Create" v-bind:edit="Edit">
-            <template slot="read">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
                 <input type="text" v-model="Internal.accessor">
             </template>
-            <template slot="write">
+            <template slot="read">
                 <p>
                     {{accessor}}
                 </p>
@@ -464,6 +483,10 @@
                 MemberUpdate:function(inArray, inIndex, inValue)
                 {
                     inArray.splice(inIndex, 1, inValue);
+                },
+                MemberInsert:function(inArray, inIndex, inValue)
+                {
+                    inArray.splice(inIndex, 0, inValue);
                 },
                 MemberDelete:function(inArray, inIndex)
                 {
