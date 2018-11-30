@@ -12,14 +12,33 @@
     </head>
     <body>
         <div id="App">
-            <div class="Frame Source" v-for="(sourceValue, sourceKey) in API.Sources">
-                
+            <div class="Frame Source New">
+                <edit-source
+                    create-mode
+                    v-on:create="MemberCreate(API.Sources, $event)">
+                </edit-source>
+            </div>
+            <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
+
                 <edit-source
                     v-bind="sourceValue"
                     v-on:update="MemberUpdate(API.Sources, sourceKey, $event)"
-                    v-on:delete="MemberDelete(API.Sources, sourceKey, $event)">
+                    v-on:delete="MemberDelete(API.Sources, sourceKey)">
                 </edit-source>
-                
+                <div class="Frame Constraint New">
+                    <edit-constraint
+                        create-mode
+                        v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
+                    </edit-constraint>
+                </div>
+                <div class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
+                    <edit-constraint
+                        v-bind:accessor="constraintValue"
+                        v-on:update="MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
+                        v-on:delete="MemberDelete(sourceValue.constraint, constraintKey)">
+                    </edit-constraint>
+                </div>
+
                 <div class="Frame Schema New">
                     <edit-schema
                         create-mode
@@ -30,32 +49,29 @@
                     <edit-schema
                         v-bind="schemaValue"
                         v-on:update="MemberUpdate(sourceValue.schemas, schemaKey, $event)"
-                        v-on:delete="MemberDelete(sourceValue.schemas, schemaKey, $event)">
+                        v-on:delete="MemberDelete(sourceValue.schemas, schemaKey)">
                     </edit-schema>
                     <table>
                         <tr>
-                            <th>
+                            <th class="Frame Column New">
                                 <edit-column
                                     create-mode
                                     v-on:create="MemberCreate(schemaValue.columns, $event)">
                                 </edit-column>
                             </th>
-                            <th v-for="(columnValue, columnKey) in schemaValue.columns">
+                            <th class="Frame Column Existing" v-for="(columnValue, columnKey) in schemaValue.columns">
                                 <edit-column
                                     v-bind="columnValue"
                                     v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
-                                    v-on:delete="MemberDelete(schemaValue.columns, columnKey, $event)">
+                                    v-on:delete="MemberDelete(schemaValue.columns, columnKey)">
                                 </edit-column>
                             </th>
                         </tr>
                     </table>
                 </div>
-            
+
             </div>
-            <edit-source
-                create-mode
-                v-on:create="MemberCreate(API.Sources, $event)">
-            </edit-source>
+
         </div>
     </body>
 
@@ -164,7 +180,7 @@
 
     <!-- constraint -->
     <script>
-        Vue.component("constraint", {
+        Vue.component("edit-constraint", {
             mixins:[MixinEditor],
             props:{
                 accessor:{default:"{}"}
@@ -176,14 +192,14 @@
                         accessor: inObj.accessor
                     };
                 }
-            }
+            },
+            template:"#TemplateConstraint"
         })
     </script>
     <script id="TemplateConstraint" type="text/x-template">
         <div>
             <div v-if="Edit || Create">
                 <input type="text" v-model="Internal.accessor">
-                <br/>
                 <br/>
                 <div v-if="Create">
                     <button v-on:click="EditCreate">Create</button>
@@ -310,7 +326,7 @@
                             name:"dcard",
                             source:"client_file",
                             loading_function:"csv",
-                            contraint:["{Trans. Date}","{Post Date}","{Description}"],
+                            constraint:["{Trans. Date}","{Post Date}","{Description}"],
                             schemas:[
                                 {
                                     name:"mapped",
