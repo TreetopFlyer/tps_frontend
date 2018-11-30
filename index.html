@@ -12,6 +12,7 @@
     </head>
     <body>
         <div id="App">
+            <h2>Sources</h2>
             <div class="Frame Source New">
                 <edit-source
                     create-mode
@@ -19,26 +20,32 @@
                 </edit-source>
             </div>
             <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
-
                 <edit-source
                     v-bind="sourceValue"
                     v-on:update="MemberUpdate(API.Sources, sourceKey, $event)"
                     v-on:delete="MemberDelete(API.Sources, sourceKey)">
                 </edit-source>
-                <div class="Frame Constraint New">
-                    <edit-constraint
-                        create-mode
-                        v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
-                    </edit-constraint>
-                </div>
-                <div class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
-                    <edit-constraint
-                        v-bind:accessor="constraintValue"
-                        v-on:update="MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
-                        v-on:delete="MemberDelete(sourceValue.constraint, constraintKey)">
-                    </edit-constraint>
-                </div>
 
+                <h3>Constriant:</h3>
+                <table>
+                    <tr>
+                        <th class="Frame Constraint New">
+                            <edit-constraint
+                                create-mode
+                                v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
+                            </edit-constraint>
+                        </th>
+                        <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
+                            <edit-constraint
+                                v-bind:accessor="constraintValue"
+                                v-on:update="MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
+                                v-on:delete="MemberDelete(sourceValue.constraint, constraintKey)">
+                            </edit-constraint>
+                        </th>
+                    </tr>
+                </table>
+
+                <h3>Schemas:</h3>
                 <div class="Frame Schema New">
                     <edit-schema
                         create-mode
@@ -130,6 +137,8 @@
                 name:{default:'New Source'},
                 source:{default:'New source type'},
                 loading_function:{default:'json'},
+                constraint:{default:function(){ return []; }},
+                schemas:{default:function(){ return []; }}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -138,8 +147,8 @@
                         name: inObj.name,
                         source: inObj.source,
                         loading_function: inObj.loading_function,
-                        constraint: [],
-                        schemas: []
+                        constraint: inObj.constraint,
+                        schemas: inObj.schemas
                     };
                 }
             },
@@ -397,10 +406,6 @@
                 {
                     inArray.splice(inIndex, 1);
                 }
-            },
-            mounted:function()
-            {
-                //this.UpdateSource();
             }
         });
     </script>
