@@ -175,7 +175,34 @@
         }
     };
     </script>
-        
+    
+    <!-- base editor layout -->
+    <script>
+    Vue.component("edit-editor", {
+        props:["create", "edit"],
+        template:"#TemplateBaseEditor"
+    });
+    </script>
+    <script id="TemplateBaseEditor" type="text/x-template">
+        <div>
+            <div v-if="create || edit">
+                <slot name="write"></slot>
+                <div v-if="create">
+                    <button v-on:click="EditCreate">Create</button>
+                </div>
+                <div v-else>
+                    <button v-on:click="EditUpdate">Update</button>
+                    <button v-on:click="EditCancel">Cancel</button>
+                    <button v-on:click="EditDelete">Delete</button>
+                </div>
+            </div>
+            <div v-else>
+                <slot name="read"></slot>
+                <button v-on:click="EditStart">Edit</button>
+            </div>
+        </div>
+    </script>
+    
     <!-- source -->
     <script>
         Vue.component("edit-source", {
@@ -253,26 +280,16 @@
         })
     </script>
     <script id="TemplateConstraint" type="text/x-template">
-        <div>
-            <div v-if="Edit || Create">
+        <edit-editor v-bind:create="Create" v-bind:edit="Edit">
+            <template slot="read">
                 <input type="text" v-model="Internal.accessor">
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
+            </template>
+            <template slot="write">
                 <p>
                     {{accessor}}
                 </p>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
+            </template>
+        </edit-editor>
     </script>
 
     <!-- schema -->
