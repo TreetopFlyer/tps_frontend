@@ -111,7 +111,7 @@
                 source:{default:'New source type'},
                 loading_function:{default:'json'},
                 constraint:{type:Array},
-                schemas:{type:Array}
+                schemas:{default:function(){ return []; }}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -119,7 +119,8 @@
                     return {
                         name: inObj.name,
                         source: inObj.source,
-                        loading_function: inObj.loading_function
+                        loading_function: inObj.loading_function,
+                        schemas: inObj.schemas
                     };
                 }
             },
@@ -164,12 +165,14 @@
         mixins:[MixinEditor],
         props:{
             name:{default:'New Schema'},
+            columns:{default:function(){return [];}}
         },
         methods:{
             CloneFields:function(inObj)
             {
                 return {
-                    name: inObj.name
+                    name: inObj.name,
+                    columns: inObj.columns
                 };
             }
         },
