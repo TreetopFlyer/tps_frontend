@@ -82,7 +82,7 @@
                                     <th class="Frame Constraint New">
                                         <edit-constraint
                                             create-mode
-                                            v-on:create="MemberInsert(sourceValue.constraint, 0, $event.accessor)">
+                                            v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
                                         </edit-constraint>
                                     </th>
                                     <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
@@ -108,8 +108,9 @@
                                     <th class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
                                         <edit-schema
                                             v-bind="schemaValue"
-                                            v-on:update="MemberUpdate(sourceValue.schemas, schemaKey, $event)"
-                                            v-on:delete="MemberDelete(sourceValue.schemas, schemaKey)">
+                                            v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
+                                            v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
+                                            v-on:duplicate="MemberInsert(sourceValue.schemas, schemaKey, $event)">
                                         </edit-schema>
                                         <h4>Columns:</h4>
                                         <div class="Frame Column New">
@@ -122,7 +123,8 @@
                                             <edit-column
                                                 v-bind="columnValue"
                                                 v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
-                                                v-on:delete="MemberDelete(schemaValue.columns, columnKey)">
+                                                v-on:delete="MemberDelete(schemaValue.columns, columnKey)"
+                                                v-on:duplicate="MemberInsert(schemaValue.columns, columnKey, $event)">
                                             </edit-column>
                                         </div>
                                     </th>
@@ -180,6 +182,7 @@
             },
             EditDuplicate:function()
             {
+                this.Internal = this.CloneFields(this);
                 this.$emit('duplicate', this.CloneFields(this.Internal));
             }
         }
@@ -233,8 +236,8 @@
                         name: inObj.name,
                         source: inObj.source,
                         loading_function: inObj.loading_function,
-                        constraint: inObj.constraint,
-                        schemas: inObj.schemas
+                        constraint: JSON.parse(JSON.stringify(inObj.constraint)),
+                        schemas: JSON.parse(JSON.stringify(inObj.schemas))
                     };
                 }
             },
@@ -316,14 +319,15 @@
     Vue.component("edit-schema", {
         mixins:[MixinEditor],
         props:{
-            name:{default:'New Schema'}
+            name:{default:'New Schema'},
+            columns:{default: function(){ return [];}}
         },
         methods:{
             CloneFields:function(inObj)
             {
                 return {
                     name: inObj.name,
-                    columns: []
+                    columns: JSON.parse(JSON.stringify(inObj.columns))
                 };
             }
         },
@@ -331,24 +335,23 @@
     });
     </script>
     <script id="TemplateHeading" type="text/x-template">
-        <div class="heading">
-            <div v-if="Edit || Create">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="read">
+                <strong>{{name}}</strong>
+            </template>
+            <template slot="write">
+                <label>Name:</label>
                 <input type="text" v-model="Internal.name">
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
-                <strong>{{name}}</strong><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
+            </template>
+        </edit-editor>
     </script>
 
     <!-- column -->
@@ -374,8 +377,16 @@
     });
     </script>
     <script id="TemplateColumn" type="text/x-template">
-        <div class="column">
-            <div v-if="Edit || Create">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
                 <input type="text" v-model="Internal.name">
                 <br/>
                 <input type="text" v-model="Internal.path">
@@ -386,23 +397,13 @@
                     <option>numeric</option>
                     <option>text</option>
                 </select>
-                <br/>
-                <div v-if="Create">
-                    <button v-on:click="EditCreate">Create</button>
-                </div>
-                <div v-else>
-                    <button v-on:click="EditUpdate">Update</button>
-                    <button v-on:click="EditCancel">Cancel</button>
-                    <button v-on:click="EditDelete">Delete</button>
-                </div>
-            </div>
-            <div v-else>
+            </template>
+            <template slot="read">
                 <strong>{{name}}</strong><br/>
                 <span>{{path}}</span><br/>
                 <em>{{type}}</em><br/>
-                <button v-on:click="EditStart">Edit</button>
-            </div>
-        </div>
+            </template>
+        </edit-editor>
     </script>
 
     <!-- application -->
