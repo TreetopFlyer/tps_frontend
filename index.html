@@ -13,13 +13,20 @@
     <body>
         <div id="App">
             <div class="Frame Source" v-for="(sourceValue, sourceKey) in API.Sources">
+                
                 <edit-source
                     v-bind="sourceValue"
                     v-on:update="MemberUpdate(API.Sources, sourceKey, $event)"
                     v-on:delete="MemberDelete(API.Sources, sourceKey, $event)">
                 </edit-source>
-                <div class="Frame Schema" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
-                    {{schemaKey}}
+                
+                <div class="Frame Schema New">
+                    <edit-schema
+                        create-mode
+                        v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
+                    </edit-schema>
+                </div>
+                <div class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
                     <edit-schema
                         v-bind="schemaValue"
                         v-on:update="MemberUpdate(sourceValue.schemas, schemaKey, $event)"
@@ -34,7 +41,6 @@
                                 </edit-column>
                             </th>
                             <th v-for="(columnValue, columnKey) in schemaValue.columns">
-                                {{columnKey}}
                                 <edit-column
                                     v-bind="columnValue"
                                     v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
@@ -44,10 +50,7 @@
                         </tr>
                     </table>
                 </div>
-                <edit-schema
-                    create-mode
-                    v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
-                </edit-schema>
+            
             </div>
             <edit-source
                 create-mode
@@ -111,8 +114,6 @@
                 name:{default:'New Source'},
                 source:{default:'New source type'},
                 loading_function:{default:'json'},
-                constraint:{type:Array},
-                schemas:{default:function(){ return []; }}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -121,7 +122,8 @@
                         name: inObj.name,
                         source: inObj.source,
                         loading_function: inObj.loading_function,
-                        schemas: inObj.schemas
+                        constraint: [],
+                        schemas: []
                     };
                 }
             },
@@ -129,7 +131,7 @@
         })
     </script>
     <script id="TemplateSource" type="text/x-template">
-        <div class="source">
+        <div>
             <div v-if="Edit || Create">
                 <input type="text" v-model="Internal.name">
                 <br/>
@@ -160,20 +162,60 @@
         </div>
     </script>
 
+    <!-- constraint -->
+    <script>
+        Vue.component("constraint", {
+            mixins:[MixinEditor],
+            props:{
+                accessor:{default:"{}"}
+            },
+            methods:{
+                CloneFields:function(inObj)
+                {
+                    return {
+                        accessor: inObj.accessor
+                    };
+                }
+            }
+        })
+    </script>
+    <script id="TemplateConstraint" type="text/x-template">
+        <div>
+            <div v-if="Edit || Create">
+                <input type="text" v-model="Internal.accessor">
+                <br/>
+                <br/>
+                <div v-if="Create">
+                    <button v-on:click="EditCreate">Create</button>
+                </div>
+                <div v-else>
+                    <button v-on:click="EditUpdate">Update</button>
+                    <button v-on:click="EditCancel">Cancel</button>
+                    <button v-on:click="EditDelete">Delete</button>
+                </div>
+            </div>
+            <div v-else>
+                <p>
+                    {{accessor}}
+                </p>
+                <button v-on:click="EditStart">Edit</button>
+            </div>
+        </div>
+    </script>
+
     <!-- schema -->
     <script>
     Vue.component("edit-schema", {
         mixins:[MixinEditor],
         props:{
-            name:{default:'New Schema'},
-            columns:{default:function(){return [];}}
+            name:{default:'New Schema'}
         },
         methods:{
             CloneFields:function(inObj)
             {
                 return {
                     name: inObj.name,
-                    columns: inObj.columns
+                    columns: []
                 };
             }
         },
