@@ -22,7 +22,7 @@
             {
                 border-radius:5px;
             }
-            th
+            td
             {
                 text-align: left;
                 vertical-align: top;
@@ -68,6 +68,18 @@
                 border:1px solid #aaa;
                 padding:10px;
             }
+            .Frame.Source
+            {
+                margin-bottom:8px;
+            }
+            button
+            {
+                cursor:pointer;
+            }
+            button span
+            {
+                display:none;
+            }
         </style>
     </head>
     <body>
@@ -98,43 +110,43 @@
                                     v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
                                 </edit-source>
                 
-                                <h3>Constriant:</h3>
+                                <p><i class="icon icon-chevron-right"></i> Constriant:</p>
                                 <table>
                                     <tr>
-                                        <th class="Frame Constraint New">
+                                        <td class="Frame Constraint New">
                                             <edit-constraint
                                                 create-mode
                                                 v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
                                             </edit-constraint>
-                                        </th>
-                                        <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
+                                        </td>
+                                        <td class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
                                             <edit-constraint
                                                 v-bind:accessor="constraintValue"
                                                 v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
                                                 v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
                                                 v-on:duplicate="MemberDuplicate(sourceValue.constraint, constraintKey)">
                                             </edit-constraint>
-                                        </th>
+                                        </td>
                                     </tr>
                                 </table>
                 
-                                <h3>Schemas:</h3>
+                                <p><i class="icon icon-chevron-right"></i> Schemas:</p>
                                 <table>
                                     <tr>
-                                        <th class="Frame Schema New">
+                                        <td class="Frame Schema New">
                                             <edit-schema
                                                 create-mode
                                                 v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
                                             </edit-schema>
-                                        </th>
-                                        <th class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
+                                        </td>
+                                        <td class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
                                             <edit-schema
                                                 v-bind="schemaValue"
                                                 v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
                                                 v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
                                                 v-on:duplicate="MemberDuplicate(sourceValue.schemas, schemaKey)">
                                             </edit-schema>
-                                            <h4>Columns:</h4>
+                                            <p><i class="icon icon-chevron-right"></i> Columns:</p>
                                             <div class="Frame Column New">
                                                 <edit-column
                                                     create-mode
@@ -149,7 +161,7 @@
                                                     v-on:duplicate="MemberDuplicate(schemaValue.columns, columnKey)">
                                                 </edit-column>
                                             </div>
-                                        </th>
+                                        </td>
                                     </tr>
                                 </table>
                             </div>
@@ -208,6 +220,7 @@
             },
             EditCreate:function()
             {
+                this.Internal = this.CloneFields(this);
                 this.$emit('create', this.CloneFields(this.Internal));
             },
             EditDuplicate:function()
@@ -244,18 +257,18 @@
             <form v-show="create || edit" v-on:submit.prevent="HandlerSubmit">
                 <slot name="write"></slot>
                 <div class="Controls" v-if="create">
-                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> Create</button>
+                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
                 <div class="Controls" v-else>
-                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> Update</button>
-                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> Cancel</button>
+                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> <span>Update</span></button>
+                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> <span>Cancel</span></button>
                 </div>
             </form>
             <div v-show="!create && !edit">
                 <div class="Controls">
-                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> Edit</button>
-                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> Duplicate</button>
-                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> Delete</button>
+                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> <span>Edit</span></button>
+                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> <span>Duplicate</span></button>
+                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> <span>Delete</span></button>
                 </div>
                 <slot name="read"></slot>
             </div>
@@ -312,7 +325,11 @@
                 </select>
             </template>
             <template slot="read">
-                <strong>{{name}}</strong> | {{source}} | {{loading_function}}
+                <h3>{{name}}</h3>
+                <p>
+                    <i class="icon icon-chevron-right"></i> Source: <strong>{{source}}</strong><br>
+                    <i class="icon icon-chevron-right"></i> Loading Function: <strong>{{loading_function}}</strong>
+                </p>
             </template>
         </edit-editor>
     </script>
@@ -322,7 +339,7 @@
         Vue.component("edit-constraint", {
             mixins:[MixinEditor],
             props:{
-                accessor:{default:"{}"}
+                accessor:{default:"{constraint}"}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -386,10 +403,9 @@
             @cancel="EditCancel"
             @duplicate="EditDuplicate">
             <template slot="read">
-                <strong>{{name}}</strong>
+                <h4>{{name}}</h4>
             </template>
             <template slot="write">
-                <label>Name:</label>
                 <input type="text" v-model="Internal.name">
             </template>
         </edit-editor>
@@ -440,7 +456,7 @@
                 </select>
             </template>
             <template slot="read">
-                <strong>{{name}}</strong><br/>
+                <h5>{{name}}</h5>
                 <span>{{path}}</span><br/>
                 <em>{{type}}</em><br/>
             </template>
