@@ -21,6 +21,12 @@
             button
             {
                 border-radius:5px;
+                border:1px;
+                padding:3px 8px;
+            }
+            button:hover
+            {
+                background:#fc0;
             }
             td
             {
@@ -65,7 +71,9 @@
             }
             .Frame
             {
-                border:1px solid #aaa;
+                border:1px solid rgb(202, 198, 198);
+                background:#fff;
+                box-shadow:0px 3px 10px rgba(0, 0, 0, 0.2);
                 padding:10px;
             }
             .Frame.Source
@@ -220,7 +228,6 @@
             },
             EditCreate:function()
             {
-                this.Internal = this.CloneFields(this);
                 this.$emit('create', this.CloneFields(this.Internal));
             },
             EditDuplicate:function()
