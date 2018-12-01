@@ -165,6 +165,7 @@
             EditStart:function()
             {
                 this.Edit = true;
+                console.log(this.$refs.focus.focus());
                 this.Internal = this.CloneFields(this);
             },
             EditUpdate:function()
@@ -198,26 +199,41 @@
             create:{default: false},
             edit:{default: false}
         },
+        methods:{
+            HandlerSubmit:function()
+            {
+                if(this.create)
+                {
+                    this.$emit('create');
+                }
+                if(this.edit)
+                {
+                    this.$emit('update');
+                }
+            }
+        },
         template:"#TemplateBaseEditor"
     });
     </script>
     <script id="TemplateBaseEditor" type="text/x-template">
         <div>
-            <div v-if="create || edit">
+            <form v-show="create || edit" v-on:submit.prevent="HandlerSubmit">
                 <slot name="write"></slot>
-                <div v-if="create">
-                    <button v-on:click="$emit('create')"><i class="icon icon-plus-circle"></i> Create</button>
+                <div class="Controls" v-if="create">
+                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> Create</button>
                 </div>
-                <div v-else>
-                    <button v-on:click="$emit('update')"><i class="icon icon-save"></i> Update</button>
-                    <button v-on:click="$emit('cancel')"><i class="icon icon-slash"></i> Cancel</button>
+                <div class="Controls" v-else>
+                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> Update</button>
+                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> Cancel</button>
                 </div>
-            </div>
-            <div v-else>
+            </form>
+            <div v-show="!create && !edit">
+                <div class="Controls">
+                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> Edit</button>
+                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> Duplicate</button>
+                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> Delete</button>
+                </div>
                 <slot name="read"></slot>
-                <button v-on:click="$emit('edit')"><i class="icon icon-edit"></i> Edit</button>
-                <button v-on:click="$emit('duplicate')"><i class="icon icon-copy"></i> Duplicate</button>
-                <button v-on:click="$emit('delete')"><i class="icon icon-trash-2"></i> Delete</button>
             </div>
         </div>
     </script>
@@ -230,8 +246,6 @@
                 name:{default:'New Source'},
                 source:{default:'New source type'},
                 loading_function:{default:'json'},
-                constraint:{default:function(){ return []; }},
-                schemas:{default:function(){ return []; }}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -240,8 +254,8 @@
                         name: inObj.name,
                         source: inObj.source,
                         loading_function: inObj.loading_function,
-                        constraint: JSON.parse(JSON.stringify(inObj.constraint)),
-                        schemas: JSON.parse(JSON.stringify(inObj.schemas))
+                        constraint: [],
+                        schemas: []
                     };
                 }
             },
@@ -260,7 +274,7 @@
             @duplicate="EditDuplicate">
             <template slot="write">
                 <label>Name:</label>
-                <input type="text" v-model="Internal.name">
+                <input ref="focus" type="text" v-model="Internal.name">
                 <br/>
                 <label>Source:</label>
                 <input type="text" v-model="Internal.source">
@@ -323,15 +337,14 @@
     Vue.component("edit-schema", {
         mixins:[MixinEditor],
         props:{
-            name:{default:'New Schema'},
-            columns:{default: function(){ return [];}}
+            name:{default:'New Schema'}
         },
         methods:{
             CloneFields:function(inObj)
             {
                 return {
                     name: inObj.name,
-                    columns: JSON.parse(JSON.stringify(inObj.columns))
+                    columns: []
                 };
             }
         },
