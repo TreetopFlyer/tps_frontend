@@ -41,6 +41,22 @@
             {
                 padding:1rem;
             }
+            .Columns
+            {
+                overflow:hidden;
+            }
+            .Columns .Column
+            {
+                float:left;
+            }
+            .Column.Large
+            {
+                width:70%;
+            }
+            .Column.Small
+            {
+                width:30%;
+            }
             /********************/
             .Band.Header
             {
@@ -64,77 +80,85 @@
                 </div>
             </div>
             <div class="Band Sources">
-                <div class="Center">
-                    <div class="Pad">
-                        <h2>Sources</h2>
-                        <div class="Frame Source New">
-                            <edit-source
-                                create-mode
-                                v-on:create="MemberCreate(API.Sources, $event)">
-                            </edit-source>
-                        </div>
-                        <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
-                            <edit-source
-                                v-bind="sourceValue"
-                                v-on:update="   MemberUpdate(API.Sources, sourceKey, $event)"
-                                v-on:delete="   MemberDelete(API.Sources, sourceKey)"
-                                v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
-                            </edit-source>
-            
-                            <h3>Constriant:</h3>
-                            <table>
-                                <tr>
-                                    <th class="Frame Constraint New">
-                                        <edit-constraint
-                                            create-mode
-                                            v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
-                                        </edit-constraint>
-                                    </th>
-                                    <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
-                                        <edit-constraint
-                                            v-bind:accessor="constraintValue"
-                                            v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
-                                            v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
-                                            v-on:duplicate="MemberDuplicate(sourceValue.constraint, constraintKey)">
-                                        </edit-constraint>
-                                    </th>
-                                </tr>
-                            </table>
-            
-                            <h3>Schemas:</h3>
-                            <table>
-                                <tr>
-                                    <th class="Frame Schema New">
-                                        <edit-schema
-                                            create-mode
-                                            v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
-                                        </edit-schema>
-                                    </th>
-                                    <th class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
-                                        <edit-schema
-                                            v-bind="schemaValue"
-                                            v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
-                                            v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
-                                            v-on:duplicate="MemberDuplicate(sourceValue.schemas, schemaKey)">
-                                        </edit-schema>
-                                        <h4>Columns:</h4>
-                                        <div class="Frame Column New">
-                                            <edit-column
+                <div class="Center Columns">
+                    <div class="Column Large">
+                        <div class="Pad">
+                            <h2>Sources</h2>
+                            <div class="Frame Source New">
+                                <edit-source
+                                    create-mode
+                                    v-on:create="MemberCreate(API.Sources, $event)">
+                                </edit-source>
+                            </div>
+                            <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
+                                <edit-source
+                                    v-bind="sourceValue"
+                                    v-on:update="   MemberUpdate(API.Sources, sourceKey, $event)"
+                                    v-on:delete="   MemberDelete(API.Sources, sourceKey)"
+                                    v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
+                                </edit-source>
+                
+                                <h3>Constriant:</h3>
+                                <table>
+                                    <tr>
+                                        <th class="Frame Constraint New">
+                                            <edit-constraint
                                                 create-mode
-                                                v-on:create="MemberCreate(schemaValue.columns, $event)">
-                                            </edit-column>
-                                        </div>
-                                        <div class="Frame Column Existing" v-for="(columnValue, columnKey) in schemaValue.columns">
-                                            <edit-column
-                                                v-bind="columnValue"
-                                                v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
-                                                v-on:delete="MemberDelete(schemaValue.columns, columnKey)"
-                                                v-on:duplicate="MemberDuplicate(schemaValue.columns, columnKey)">
-                                            </edit-column>
-                                        </div>
-                                    </th>
-                                </tr>
-                            </table>
+                                                v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
+                                            </edit-constraint>
+                                        </th>
+                                        <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
+                                            <edit-constraint
+                                                v-bind:accessor="constraintValue"
+                                                v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
+                                                v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
+                                                v-on:duplicate="MemberDuplicate(sourceValue.constraint, constraintKey)">
+                                            </edit-constraint>
+                                        </th>
+                                    </tr>
+                                </table>
+                
+                                <h3>Schemas:</h3>
+                                <table>
+                                    <tr>
+                                        <th class="Frame Schema New">
+                                            <edit-schema
+                                                create-mode
+                                                v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
+                                            </edit-schema>
+                                        </th>
+                                        <th class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
+                                            <edit-schema
+                                                v-bind="schemaValue"
+                                                v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
+                                                v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
+                                                v-on:duplicate="MemberDuplicate(sourceValue.schemas, schemaKey)">
+                                            </edit-schema>
+                                            <h4>Columns:</h4>
+                                            <div class="Frame Column New">
+                                                <edit-column
+                                                    create-mode
+                                                    v-on:create="MemberCreate(schemaValue.columns, $event)">
+                                                </edit-column>
+                                            </div>
+                                            <div class="Frame Column Existing" v-for="(columnValue, columnKey) in schemaValue.columns">
+                                                <edit-column
+                                                    v-bind="columnValue"
+                                                    v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
+                                                    v-on:delete="MemberDelete(schemaValue.columns, columnKey)"
+                                                    v-on:duplicate="MemberDuplicate(schemaValue.columns, columnKey)">
+                                                </edit-column>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="Column Small">
+                        <div class="Pad">
+                            <h2>Output JSON</h2>
+                            <textarea style="display:block; width:100%; min-height:400px;">{{JSON}}</textarea>
                         </div>
                     </div>
                 </div>
@@ -431,26 +455,13 @@
                 API:{
                     Domain:'//localhost:80',
                     RequestLog:[],
-                    Sources:[
-                        {
-                            name:"dcard",
-                            source:"client_file",
-                            loading_function:"csv",
-                            constraint:["{Trans. Date}","{Post Date}","{Description}"],
-                            schemas:[
-                                {
-                                    name:"mapped",
-                                    columns:[
-                                        {
-                                            name:"Trans. Date",
-                                            path:"{Trans.Date}",
-                                            type:"date"
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
+                    Sources:[]
+                }
+            },
+            computed:{
+                JSON:function()
+                {
+                    return JSON.stringify(this.API.Sources, null, 2);
                 }
             },
             methods:{
