@@ -2,140 +2,455 @@
 <html>
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans|Roboto" rel="stylesheet">
+        <link href="icomoon/font.css" rel="stylesheet">
+        <style>
+            *
+            {
+                position:relative;
+                font-family:Roboto, sans-serif;
+            }
+            h1, h2, h3, h4, h5, h6
+            {
+                font-family:Open Sans, sans-serif;
+            }
+            body
+            {
+                margin:0;
+            }
+            button
+            {
+                border-radius:5px;
+            }
+            th
+            {
+                text-align: left;
+                vertical-align: top;
+            }
+            /*******************/
+            .Band
+            {
+
+            }
+            .Center
+            {
+                max-width:1170px;
+                margin:0 auto;
+            }
+            .Pad
+            {
+                padding:1rem;
+            }
+            /********************/
+            .Band.Header
+            {
+                background:#000;
+                color:#fff;
+            }
+            .Frame
+            {
+                border:1px solid #aaa;
+                padding:10px;
+            }
+        </style>
     </head>
     <body>
         <div id="App">
-            <div v-for="source in API.Sources">
-                <tps-source :source="source"/>
+            <div class="Band Header">
+                <div class="Center">
+                    <div class="Pad">
+                        <strong>TPS</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="Band Sources">
+                <div class="Center">
+                    <div class="Pad">
+                        <h2>Sources</h2>
+                        <div class="Frame Source New">
+                            <edit-source
+                                create-mode
+                                v-on:create="MemberCreate(API.Sources, $event)">
+                            </edit-source>
+                        </div>
+                        <div class="Frame Source Existing" v-for="(sourceValue, sourceKey) in API.Sources">
+                            <edit-source
+                                v-bind="sourceValue"
+                                v-on:update="   MemberUpdate(API.Sources, sourceKey, $event)"
+                                v-on:delete="   MemberDelete(API.Sources, sourceKey)"
+                                v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
+                            </edit-source>
+            
+                            <h3>Constriant:</h3>
+                            <table>
+                                <tr>
+                                    <th class="Frame Constraint New">
+                                        <edit-constraint
+                                            create-mode
+                                            v-on:create="MemberCreate(sourceValue.constraint, $event.accessor)">
+                                        </edit-constraint>
+                                    </th>
+                                    <th class="Frame Constraint Existing" v-for="(constraintValue, constraintKey) in sourceValue.constraint">
+                                        <edit-constraint
+                                            v-bind:accessor="constraintValue"
+                                            v-on:update="   MemberUpdate(sourceValue.constraint, constraintKey, $event.accessor)"
+                                            v-on:delete="   MemberDelete(sourceValue.constraint, constraintKey)"
+                                            v-on:duplicate="MemberDuplicate(sourceValue.constraint, constraintKey)">
+                                        </edit-constraint>
+                                    </th>
+                                </tr>
+                            </table>
+            
+                            <h3>Schemas:</h3>
+                            <table>
+                                <tr>
+                                    <th class="Frame Schema New">
+                                        <edit-schema
+                                            create-mode
+                                            v-on:create="MemberCreate(sourceValue.schemas, $event)"/>
+                                        </edit-schema>
+                                    </th>
+                                    <th class="Frame Schema Existing" v-for="(schemaValue, schemaKey) in sourceValue.schemas">
+                                        <edit-schema
+                                            v-bind="schemaValue"
+                                            v-on:update="   MemberUpdate(sourceValue.schemas, schemaKey, $event)"
+                                            v-on:delete="   MemberDelete(sourceValue.schemas, schemaKey)"
+                                            v-on:duplicate="MemberDuplicate(sourceValue.schemas, schemaKey)">
+                                        </edit-schema>
+                                        <h4>Columns:</h4>
+                                        <div class="Frame Column New">
+                                            <edit-column
+                                                create-mode
+                                                v-on:create="MemberCreate(schemaValue.columns, $event)">
+                                            </edit-column>
+                                        </div>
+                                        <div class="Frame Column Existing" v-for="(columnValue, columnKey) in schemaValue.columns">
+                                            <edit-column
+                                                v-bind="columnValue"
+                                                v-on:update="MemberUpdate(schemaValue.columns, columnKey, $event)"
+                                                v-on:delete="MemberDelete(schemaValue.columns, columnKey)"
+                                                v-on:duplicate="MemberDuplicate(schemaValue.columns, columnKey)">
+                                            </edit-column>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </body>
 
+    <!-- base editor -->
+    <script>
+    var MixinEditor = {
+        props:{
+            createMode:{type:Boolean, default:false},
+            editMode:{type:Boolean, default:false}
+        },
+        data:function()
+        {
+            return {
+                Internal:this.CloneFields(this),
+                Edit:this.editMode,
+                Create:this.createMode
+            }
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {};
+            },
+            EditStart:function()
+            {
+                this.Edit = true;
+                console.log(this.$refs.focus.focus());
+                this.Internal = this.CloneFields(this);
+            },
+            EditUpdate:function()
+            {
+                this.Edit = false;
+                this.$emit('update', this.CloneFields(this.Internal));
+            },
+            EditCancel:function()
+            {
+                this.Edit = false;
+            },
+            EditDelete:function()
+            {
+                this.Edit = false;
+                this.$emit('delete');
+            },
+            EditCreate:function()
+            {
+                this.$emit('create', this.CloneFields(this.Internal));
+            },
+            EditDuplicate:function()
+            {
+                this.$emit('duplicate');
+            }
+        }
+    };
+    </script>
+    <script>
+    Vue.component("edit-editor", {
+        props:{
+            create:{default: false},
+            edit:{default: false}
+        },
+        methods:{
+            HandlerSubmit:function()
+            {
+                if(this.create)
+                {
+                    this.$emit('create');
+                }
+                if(this.edit)
+                {
+                    this.$emit('update');
+                }
+            }
+        },
+        template:"#TemplateBaseEditor"
+    });
+    </script>
+    <script id="TemplateBaseEditor" type="text/x-template">
+        <div>
+            <form v-show="create || edit" v-on:submit.prevent="HandlerSubmit">
+                <slot name="write"></slot>
+                <div class="Controls" v-if="create">
+                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> Create</button>
+                </div>
+                <div class="Controls" v-else>
+                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> Update</button>
+                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> Cancel</button>
+                </div>
+            </form>
+            <div v-show="!create && !edit">
+                <div class="Controls">
+                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> Edit</button>
+                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> Duplicate</button>
+                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> Delete</button>
+                </div>
+                <slot name="read"></slot>
+            </div>
+        </div>
+    </script>
+    
     <!-- source -->
     <script>
-        Vue.component("tps-source", {
-            delimiters: ['${', '}'],
-            props:['source'],
-            data: function()
-            {
-                return {
-                    Edit:false,
-                    Copy:{},
-                    Temp:{
-                        Constraint:'',
-                        Column:{column_name:'Trans. Date', path:'{Trans. Date}', type:'date'}
-                    }
-                };
+        Vue.component("edit-source", {
+            mixins:[MixinEditor],
+            props:{
+                name:{default:'New Source'},
+                source:{default:'New source type'},
+                loading_function:{default:'json'},
             },
-            methods:
-            {
-                EditStart: function()
+            methods:{
+                CloneFields:function(inObj)
                 {
-                    this.Edit = true;
-                    this.Copy = JSON.parse(JSON.stringify(this.source));
-                },
-                EditCancel: function()
-                {
-                    this.Edit = false;
-                },
-                ConstraintRemove: function(inIndex)
-                {
-                    this.Copy.constraint.splice(inIndex, 1);
-                },
-                ConstraintAdd: function()
-                {
-                    this.Copy.constraint.push(this.Temp.Constraint);
-                    this.Temp.Constraint = '';
+                    return {
+                        name: inObj.name,
+                        source: inObj.source,
+                        loading_function: inObj.loading_function,
+                        constraint: [],
+                        schemas: []
+                    };
                 }
             },
-            computed:
-            {
-
-            },
-            mounted:function()
-            {
-
-            },
             template:"#TemplateSource"
-        });
+        })
     </script>
     <script id="TemplateSource" type="text/x-template">
-        <div class="Source">
-            <dl v-show="!Edit">
-                <dt v-html="source.name"></dt>
-                <dd><strong>Loading Function: </strong><span v-html="source.loading_function"></span></dd>
-                <dd><strong>Source: </strong><span v-html="source.source"></span></dd>
-                <dd><strong>Contsraints: </strong><span v-html="source.constraint.join(' ')"></span></dd>
-                <dd><strong>Schemas: </strong><span v-html=""></span></dd>
-                <dd><button v-on:click="EditStart">Edit</button></dd>
-            </dl>
-            <dl v-show="Edit">
-                <dd><input v-model="Copy.name"/></dd>
-                
-                <dd>
-                    <strong>Loading Function:</strong>
-                    <select v-model="Copy.loading_function">
-                        <option disabled>${Copy.loading_function}</option>
-                        <option>CSV</option>
-                        <option>JSON</option>
-                        <option>XML</option>
-                    </select>
-                </dd>
-                <dd>
-                    <strong>Constraint:</strong>
-                    <ul>
-                        <li v-for="(item, index) in Copy.constraint">${item} <button v-on:click="ConstraintRemove(index)">-</button></li>
-                        <li>
-                            <input type="text" v-model="Temp.Constraint"/>
-                            <button v-on:click="ConstraintAdd">+</button>
-                        </li>
-                    </ul>
-                </dd>
-                <dd>
-                    <strong>Schemas:</strong>
-                    <ul>
-                        <li v-for="(value, key) in Copy.schemas">
-                            ${key}
-                            <table cellborder="1">
-                                <tr>
-                                    <th v-for="(sValue, sKey) in value">
-                                        <strong>${sValue.column_name}</strong><br/>
-                                        <em>${sValue.type}</em>
-                                    </th>
-                                    <th>
-                                        <input v-model="Temp.Column.column_name" type="text"/>
-                                        <select>
-                                            <option disabled>${Temp.Column.type}</option>
-                                            <option>date</option>
-                                            <option>numeric</option>
-                                            <option>text</option>
-                                        </select>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <td v-for="(sValue, sKey) in value">
-                                        ${sValue.path}
-                                    </td>
-                                </tr>
-                            </table>
-                        </li>
-                    </ul>
-                </dd>
-                <dd><button v-on:click="EditCancel">Cancel</button></dd>
-            </dl>
-        </div>
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
+                <label>Name:</label>
+                <input ref="focus" type="text" v-model="Internal.name">
+                <br/>
+                <label>Source:</label>
+                <input type="text" v-model="Internal.source">
+                <br/>
+                <label>Loading Function:</label>
+                <select v-model="Internal.loading_function">
+                    <option disabled>{{Internal.type}}</option>
+                    <option>csv</option>
+                    <option>xml</option>
+                    <option>json</option>
+                </select>
+            </template>
+            <template slot="read">
+                <strong>{{name}}</strong> | {{source}} | {{loading_function}}
+            </template>
+        </edit-editor>
+    </script>
+
+    <!-- constraint -->
+    <script>
+        Vue.component("edit-constraint", {
+            mixins:[MixinEditor],
+            props:{
+                accessor:{default:"{}"}
+            },
+            methods:{
+                CloneFields:function(inObj)
+                {
+                    return {
+                        accessor: inObj.accessor
+                    };
+                }
+            },
+            template:"#TemplateConstraint"
+        })
+    </script>
+    <script id="TemplateConstraint" type="text/x-template">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
+                <input type="text" v-model="Internal.accessor">
+            </template>
+            <template slot="read">
+                <p>
+                    {{accessor}}
+                </p>
+            </template>
+        </edit-editor>
+    </script>
+
+    <!-- schema -->
+    <script>
+    Vue.component("edit-schema", {
+        mixins:[MixinEditor],
+        props:{
+            name:{default:'New Schema'}
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    name: inObj.name,
+                    columns: []
+                };
+            }
+        },
+        template:"#TemplateHeading"
+    });
+    </script>
+    <script id="TemplateHeading" type="text/x-template">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="read">
+                <strong>{{name}}</strong>
+            </template>
+            <template slot="write">
+                <label>Name:</label>
+                <input type="text" v-model="Internal.name">
+            </template>
+        </edit-editor>
+    </script>
+
+    <!-- column -->
+    <script>
+    Vue.component("edit-column", {
+        mixins:[MixinEditor],
+        props:{
+            name:{default:'New Column'},
+            path:{default:'{path}'},
+            type:{default:'text'}
+        },
+        methods:{
+            CloneFields:function(inObj)
+            {
+                return {
+                    name: inObj.name,
+                    path: inObj.path,
+                    type: inObj.type
+                };
+            }
+        },
+        template:"#TemplateColumn"
+    });
+    </script>
+    <script id="TemplateColumn" type="text/x-template">
+        <edit-editor
+            v-bind:create="Create"
+            v-bind:edit="Edit"
+            @create="EditCreate"
+            @update="EditUpdate"
+            @delete="EditDelete"
+            @edit="EditStart"
+            @cancel="EditCancel"
+            @duplicate="EditDuplicate">
+            <template slot="write">
+                <input type="text" v-model="Internal.name">
+                <br/>
+                <input type="text" v-model="Internal.path">
+                <br/>
+                <select v-model="Internal.type">
+                    <option disabled>{{Internal.type}}</option>
+                    <option>date</option>
+                    <option>numeric</option>
+                    <option>text</option>
+                </select>
+            </template>
+            <template slot="read">
+                <strong>{{name}}</strong><br/>
+                <span>{{path}}</span><br/>
+                <em>{{type}}</em><br/>
+            </template>
+        </edit-editor>
     </script>
 
     <!-- application -->
     <script>
         var App = new Vue({
-            delimiters: ['${', '}'],
             el:"#App",
             data:{
                 API:{
                     Domain:'//localhost:80',
                     RequestLog:[],
-                    Sources:[]
+                    Sources:[
+                        {
+                            name:"dcard",
+                            source:"client_file",
+                            loading_function:"csv",
+                            constraint:["{Trans. Date}","{Post Date}","{Description}"],
+                            schemas:[
+                                {
+                                    name:"mapped",
+                                    columns:[
+                                        {
+                                            name:"Trans. Date",
+                                            path:"{Trans.Date}",
+                                            type:"date"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
                 }
             },
             methods:{
@@ -165,7 +480,7 @@
                         }
 
                         var response = request.currentTarget.response || request.target.responseText;
-                        console.log(JSON.parse(response));
+                        console.log(response);
                         success.call(context, response);
                     };
                     xhr.send();
@@ -177,11 +492,30 @@
                     {
                         this.API.Sources = JSON.parse(inResponse).source_list;
                     });
+                },
+                ///////////////
+                MemberCreate:function(inArray, inValue)
+                {
+                    inArray.unshift(inValue);
+                },
+                MemberUpdate:function(inArray, inIndex, inValue)
+                {
+                    inArray.splice(inIndex, 1, inValue);
+                },
+                MemberInsert:function(inArray, inIndex, inValue)
+                {
+                    inArray.splice(inIndex, 0, inValue);
+                },
+                MemberDuplicate:function(inArray, inIndex)
+                {
+                    var clone;
+                    clone = JSON.parse(JSON.stringify( inArray[inIndex] ));
+                    inArray.splice(inIndex, 0, clone);
+                },
+                MemberDelete:function(inArray, inIndex)
+                {
+                    inArray.splice(inIndex, 1);
                 }
-            },
-            mounted:function()
-            {
-                this.UpdateSource();
             }
         });
     </script>
