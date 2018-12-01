@@ -480,6 +480,10 @@
                     Domain:'//localhost:80',
                     RequestLog:[],
                     Sources:[]
+                },
+                History:{
+                    Stack:[],
+                    Index:-1
                 }
             },
             computed:{
@@ -527,6 +531,30 @@
                     {
                         this.API.Sources = JSON.parse(inResponse).source_list;
                     });
+                },
+                HistoryPush: function()
+                {
+                    this.History.Stack.push(JSON.stringify(this.API.Sources, null, 2));
+                    this.History.Index++;
+                },
+                HistoryRecall: function()
+                {
+                    this.API.Sources = JSON.parse(this.History.Stack[this.History.Index]);
+                },
+                HistoryForward: function()
+                {
+                    if(this.History.Index < this.History.Stack.length-1)
+                    {
+                        this.History.Index++;
+                        this.HistoryRecall();
+                    }
+                },
+                HistoryBack: function()
+                {
+                    if(this.History.Index > 0)
+                    {
+                        this.History.Index++;
+                    }
                 },
                 ///////////////
                 MemberCreate:function(inArray, inValue)
