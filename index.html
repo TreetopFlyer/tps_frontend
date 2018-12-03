@@ -24,10 +24,6 @@
                 border:1px;
                 padding:3px 8px;
             }
-            button:hover
-            {
-                background:#fc0;
-            }
             td
             {
                 text-align: left;
@@ -69,6 +65,10 @@
                 background:#000;
                 color:#fff;
             }
+            .Band.History
+            {
+                background:#aaa;
+            }
             .Frame
             {
                 border:1px solid rgb(202, 198, 198);
@@ -88,6 +88,19 @@
             {
                 display:none;
             }
+            button:hover
+            {
+                background:#fc0;
+            }
+            button.Disabled
+            {
+                cursor:default;
+                opacitY:0.5;
+            }
+            button.Highlighted
+            {
+                border:2px solid #a00;
+            }
         </style>
     </head>
     <body>
@@ -95,7 +108,24 @@
             <div class="Band Header">
                 <div class="Center">
                     <div class="Pad">
-                        <strong>TPS</strong>
+                        <strong>TPS Editor</strong>
+                        <div style="float:right;">
+                            <label>API Root:</label>
+                            <input type="text" v-model="API.Domain"> | 
+                            <button v-on:click="SourceDownload"><i class="icon icon-download-cloud"></i> Download</button>
+                            <button v-on:click="SourceUpload"><i class="icon icon-upload-cloud"></i> Upload</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="Band History">
+                <div class="Center">
+                    <div class="Pad">
+                        <i class="icon icon-clock"></i> History:
+                        <button v-bind:class="{Disabled: !HistoryCanGoBack()}" v-on:click="HistoryBack()"><i class="icon icon-arrow-left"></i>Undo</button>
+                        <button v-bind:class="{Disabled: !HistoryCanGoForward()}" v-on:click="HistoryForward()"><i class="icon icon-arrow-right"></i>Redo</button>
+                        |
+                        <button v-bind:class="{Highlighted: HistoryCurrent() == itemValue}" v-on:click="HistoryRecall(itemKey)" v-for="(itemValue, itemKey) in History.Stack">{{ itemValue.Type }}</button> 
                     </div>
                 </div>
             </div>
@@ -118,7 +148,7 @@
                                     v-on:duplicate="MemberDuplicate(API.Sources, sourceKey)">
                                 </edit-source>
                 
-                                <p><i class="icon icon-chevron-right"></i> Constriant:</p>
+                                <p><i class="icon icon-chevron-right"></i> Import Constriants:</p>
                                 <table>
                                     <tr>
                                         <td class="Frame Constraint New">
@@ -138,7 +168,7 @@
                                     </tr>
                                 </table>
                 
-                                <p><i class="icon icon-chevron-right"></i> Schemas:</p>
+                                <p><i class="icon icon-chevron-right"></i> Report Outputs:</p>
                                 <table>
                                     <tr>
                                         <td class="Frame Schema New">
@@ -423,7 +453,7 @@
     Vue.component("edit-column", {
         mixins:[MixinEditor],
         props:{
-            name:{default:'New Column'},
+            column_name:{default:'New Column'},
             path:{default:'{path}'},
             type:{default:'text'}
         },
@@ -431,7 +461,7 @@
             CloneFields:function(inObj)
             {
                 return {
-                    name: inObj.name,
+                    column_name: inObj.name,
                     path: inObj.path,
                     type: inObj.type
                 };
@@ -451,7 +481,7 @@
             @cancel="EditCancel"
             @duplicate="EditDuplicate">
             <template slot="write">
-                <input type="text" v-model="Internal.name">
+                <input type="text" v-model="Internal.column_name">
                 <br/>
                 <input type="text" v-model="Internal.path">
                 <br/>
@@ -463,7 +493,7 @@
                 </select>
             </template>
             <template slot="read">
-                <h5>{{name}}</h5>
+                <h5>{{column_name}}</h5>
                 <span>{{path}}</span><br/>
                 <em>{{type}}</em><br/>
             </template>
@@ -476,9 +506,13 @@
             el:"#App",
             data:{
                 API:{
-                    Domain:'//localhost:80',
+                    Domain:'http://localhost:80',
                     RequestLog:[],
                     Sources:[]
+                },
+                History:{
+                    Stack:[{Type:"Initialized", Data:"[]"}],
+                    Index:0
                 }
             },
             computed:{
@@ -488,18 +522,18 @@
                 }
             },
             methods:{
-                CORS: function(message, url, verb, success)
+                CORS: function(inMessage, inURL, inVerb, inSuccessHandler, inBody)
                 {
                     var context = this;
                     var log = {
                         ID:Math.random(),
-                        Message:message
+                        Message:inMessage
                     };
                     context.API.RequestLog.push(log);
 
                     var xhr = new XMLHttpRequest();
                     if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
-                    xhr.open(verb, url);
+                    xhr.open(inVerb, inURL);
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     xhr.setRequestHeader('Content-Type', 'application/json');
                     xhr.onload = function(request){
@@ -515,40 +549,111 @@
 
                         var response = request.currentTarget.response || request.target.responseText;
                         console.log(response);
-                        success.call(context, response);
+                        inSuccessHandler.call(context, response);
                     };
-                    xhr.send();
+                    xhr.send(inBody);
                     return xhr;
                 },
-                UpdateSource: function()
+                SourceDownload: function()
                 {
                     this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
                     {
                         this.API.Sources = JSON.parse(inResponse).source_list;
+                        this.HistoryPush("Download");
                     });
+                },
+                SourceUpload: function()
+                {
+                    this.HistoryPush("Upload");
+                    this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
+                    {
+                        this.API.Sources = JSON.parse(inResponse).source_list;
+                    },
+                    this.HistoryCurrent().Data);
+                },
+                HistoryPush: function(inType)
+                {
+                    /*
+                    // if there's no change in the type of action, do noting (effectively combining edits)
+                    if(this.HistoryCurrent().Type == inType)
+                    {
+                        return;
+                    }
+                    */
+                    
+                    // if we have gone back and are now adding a new item, delete everything ahead of this first
+                    if(this.History.Index != this.History.Stack.length-1)
+                    {
+                        this.History.Stack.splice(this.History.Index+1);
+                    }
+
+                    this.History.Stack.push({Type:inType, Data:JSON.stringify(this.API.Sources, null, 2)});
+                    // limit to 20 items
+                    if(this.History.Stack.length > 20)
+                    {
+                        this.History.Stack.shift();
+                    }
+
+                    this.History.Index = this.History.Stack.length-1;
+                },
+                HistoryCurrent: function()
+                {
+                    return this.History.Stack[this.History.Index];
+                },
+                HistoryRecall: function(inIndex)
+                {
+                    this.History.Index = inIndex;
+                    this.API.Sources = JSON.parse(this.History.Stack[inIndex].Data);
+                },
+                HistoryForward: function()
+                {
+                    if(this.HistoryCanGoForward())
+                    {
+                        this.HistoryRecall(this.History.Index+1);
+                    }
+                },
+                HistoryBack: function()
+                {
+                    if(this.HistoryCanGoBack())
+                    {
+                        this.HistoryRecall(this.History.Index-1);
+                    }
+                },
+                HistoryCanGoBack: function()
+                {
+                    return this.History.Index > 0;
+                },
+                HistoryCanGoForward: function()
+                {
+                    return this.History.Index < this.History.Stack.length-1;
                 },
                 ///////////////
                 MemberCreate:function(inArray, inValue)
                 {
                     inArray.unshift(inValue);
+                    this.HistoryPush("Create");
                 },
                 MemberUpdate:function(inArray, inIndex, inValue)
                 {
                     inArray.splice(inIndex, 1, inValue);
+                    this.HistoryPush("Update");
                 },
                 MemberInsert:function(inArray, inIndex, inValue)
                 {
                     inArray.splice(inIndex, 0, inValue);
+                    this.HistoryPush("Insert");
                 },
                 MemberDuplicate:function(inArray, inIndex)
                 {
                     var clone;
                     clone = JSON.parse(JSON.stringify( inArray[inIndex] ));
                     inArray.splice(inIndex, 0, clone);
+                    this.HistoryPush("Duplicate");
                 },
                 MemberDelete:function(inArray, inIndex)
                 {
                     inArray.splice(inIndex, 1);
+                    this.HistoryPush("Delete");
                 }
             }
         });
