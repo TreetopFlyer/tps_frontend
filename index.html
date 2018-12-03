@@ -319,7 +319,7 @@
             props:{
                 name:{default:'New Source'},
                 source:{default:'New source type'},
-                loading_function:{default:'json'},
+                loading_function:{default:'json'}
             },
             methods:{
                 CloneFields:function(inObj)
@@ -635,7 +635,17 @@
                 },
                 MemberUpdate:function(inArray, inIndex, inValue)
                 {
-                    inArray.splice(inIndex, 1, inValue);
+                    var match = inArray[inIndex];
+                    var from, to;
+                    for(prop in inValue)
+                    {
+                        from = inValue[prop];
+                        if(from instanceof Array == false)
+                        {
+                            match[prop] = from;
+                        }
+                    }
+                    //inArray.splice(inIndex, 1, inValue);
                     this.HistoryPush("Update");
                 },
                 MemberInsert:function(inArray, inIndex, inValue)
