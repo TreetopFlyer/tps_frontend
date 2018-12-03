@@ -60,6 +60,19 @@
                 width:30%;
             }
             /********************/
+            .Band.Request
+            {
+                position:fixed;
+                width:100%;
+                height:100%;
+                top:0;
+                left:0;
+                z-index:1000;
+                background:#aaa;
+                opacity:0.5;
+                text-align:center;
+                font-size:80px;
+            }
             .Band.Header
             {
                 background:#000;
@@ -105,6 +118,12 @@
     </head>
     <body>
         <div id="App">
+            <div v-if="API.RequestLog.length !=0 " class="Band Request">
+                <div class="Center">
+                    <div class="Pad">
+                    </div>
+                </div>
+            </div>
             <div class="Band Header">
                 <div class="Center">
                     <div class="Pad">
@@ -121,9 +140,9 @@
             <div class="Band History">
                 <div class="Center">
                     <div class="Pad">
-                        <i class="icon icon-clock"></i> History:
-                        <button v-bind:class="{Disabled: !HistoryCanGoBack()}" v-on:click="HistoryBack()"><i class="icon icon-arrow-left"></i>Undo</button>
-                        <button v-bind:class="{Disabled: !HistoryCanGoForward()}" v-on:click="HistoryForward()"><i class="icon icon-arrow-right"></i>Redo</button>
+                        <i class="icon icon-clock"></i> Show State:
+                        <button v-bind:class="{Disabled: !HistoryCanGoBack()}" v-on:click="HistoryBack()"><i class="icon icon-arrow-left"></i>Back</button>
+                        <button v-bind:class="{Disabled: !HistoryCanGoForward()}" v-on:click="HistoryForward()"><i class="icon icon-arrow-right"></i>Forward</button>
                         |
                         <button v-bind:class="{Highlighted: HistoryCurrent() == itemValue}" v-on:click="HistoryRecall(itemKey)" v-for="(itemValue, itemKey) in History.Stack">{{ itemValue.Type }}</button> 
                     </div>
@@ -529,6 +548,7 @@
                         ID:Math.random(),
                         Message:inMessage
                     };
+
                     context.API.RequestLog.push(log);
 
                     var xhr = new XMLHttpRequest();
@@ -546,7 +566,7 @@
                                 context.API.RequestLog.splice(i, 1);
                             }
                         }
-
+                        
                         var response = request.currentTarget.response || request.target.responseText;
                         console.log(response);
                         inSuccessHandler.call(context, response);
@@ -567,7 +587,7 @@
                     this.HistoryPush("Upload");
                     this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
                     {
-                        this.API.Sources = JSON.parse(inResponse).source_list;
+                        alert(inResponse);
                     },
                     this.HistoryCurrent().Data);
                 },
