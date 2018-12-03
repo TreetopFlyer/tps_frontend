@@ -108,9 +108,13 @@
             <div class="Band Header">
                 <div class="Center">
                     <div class="Pad">
-                        <strong>TPS Editor</strong> | 
-                        <button v-on:click="UpdateSource"><i class="icon icon-download-cloud"></i> Download</button>
-                        <button v-on:click=""><i class="icon icon-upload-cloud"></i> Upload</button>
+                        <strong>TPS Editor</strong>
+                        <div style="float:right;">
+                            <label>API Root:</label>
+                            <input type="text" v-model="API.Domain"> | 
+                            <button v-on:click="SourceDownload"><i class="icon icon-download-cloud"></i> Download</button>
+                            <button v-on:click="SourceUpload"><i class="icon icon-upload-cloud"></i> Upload</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -502,7 +506,7 @@
             el:"#App",
             data:{
                 API:{
-                    Domain:'//localhost:80',
+                    Domain:'http://localhost:80',
                     RequestLog:[],
                     Sources:[]
                 },
@@ -518,18 +522,18 @@
                 }
             },
             methods:{
-                CORS: function(message, url, verb, success)
+                CORS: function(inMessage, inURL, inVerb, inSuccessHandler, inBody)
                 {
                     var context = this;
                     var log = {
                         ID:Math.random(),
-                        Message:message
+                        Message:inMessage
                     };
                     context.API.RequestLog.push(log);
 
                     var xhr = new XMLHttpRequest();
                     if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
-                    xhr.open(verb, url);
+                    xhr.open(inVerb, inURL);
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     xhr.setRequestHeader('Content-Type', 'application/json');
                     xhr.onload = function(request){
@@ -545,12 +549,12 @@
 
                         var response = request.currentTarget.response || request.target.responseText;
                         console.log(response);
-                        success.call(context, response);
+                        inSuccessHandler.call(context, response);
                     };
-                    xhr.send();
+                    xhr.send(inBody);
                     return xhr;
                 },
-                UpdateSource: function()
+                SourceDownload: function()
                 {
                     this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
                     {
@@ -558,13 +562,24 @@
                         this.HistoryPush("Download");
                     });
                 },
+                SourceUpload: function()
+                {
+                    this.HistoryPush("Upload");
+                    this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
+                    {
+                        this.API.Sources = JSON.parse(inResponse).source_list;
+                    },
+                    this.HistoryCurrent().Data);
+                },
                 HistoryPush: function(inType)
                 {
+                    /*
                     // if there's no change in the type of action, do noting (effectively combining edits)
                     if(this.HistoryCurrent().Type == inType)
                     {
                         return;
                     }
+                    */
                     
                     // if we have gone back and are now adding a new item, delete everything ahead of this first
                     if(this.History.Index != this.History.Stack.length-1)

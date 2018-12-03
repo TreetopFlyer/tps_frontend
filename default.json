@@ -1,0 +1,272 @@
+[
+    {
+      "name": "chase",
+      "source": "client_file",
+      "schemas": [
+        {
+          "name": "default",
+          "columns": [
+            {
+              "path": "{Type}",
+              "type": "text",
+              "column_name": "Type"
+            },
+            {
+              "path": "{Trans Date}",
+              "type": "date",
+              "column_name": "Trans Date"
+            },
+            {
+              "path": "{Post Date}",
+              "type": "date",
+              "column_name": "Post Date"
+            },
+            {
+              "path": "{Description}",
+              "type": "text",
+              "column_name": "Description"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            }
+          ]
+        }
+      ],
+      "constraint": [
+        "{Trans Date}",
+        "{Post Date}",
+        "{Description}"
+      ],
+      "loading_function": "csv"
+    },
+    {
+      "name": "hunt",
+      "source": "client_file",
+      "schemas": [
+        {
+          "name": "default",
+          "columns": [
+            {
+              "path": "{Date}",
+              "type": "date",
+              "column_name": "Date"
+            },
+            {
+              "path": "{Reference Number}",
+              "type": "numeric",
+              "column_name": "Reference Number"
+            },
+            {
+              "path": "{Payee Name}",
+              "type": "text",
+              "column_name": "Payee Name"
+            },
+            {
+              "path": "{Memo}",
+              "type": "text",
+              "column_name": "Memo"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            },
+            {
+              "path": "{Category Name}",
+              "type": "text",
+              "column_name": "Cateogry Name"
+            }
+          ]
+        }
+      ],
+      "constraint": [
+        "{Date}"
+      ],
+      "loading_function": "csv"
+    },
+    {
+      "name": "dcard",
+      "source": "client_file",
+      "schemas": [
+        {
+          "name": "mapped",
+          "columns": [
+            {
+              "path": "{Trans. Date}",
+              "type": "date",
+              "column_name": "Trans. Date"
+            },
+            {
+              "path": "{Post Date}",
+              "type": "date",
+              "column_name": "Post Date"
+            },
+            {
+              "path": "{Description}",
+              "type": "text",
+              "column_name": "Description"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            },
+            {
+              "path": "{Category}",
+              "type": "text",
+              "column_name": "Category"
+            },
+            {
+              "path": "{party}",
+              "type": "text",
+              "column_name": "Party"
+            },
+            {
+              "path": "{reason}",
+              "type": "text",
+              "column_name": "Reason"
+            }
+          ]
+        },
+        {
+          "name": "default",
+          "columns": [
+            {
+              "path": "{Trans. Date}",
+              "type": "date",
+              "column_name": "Trans. Date"
+            },
+            {
+              "path": "{Post Date}",
+              "type": "date",
+              "column_name": "Post Date"
+            },
+            {
+              "path": "{Description}",
+              "type": "text",
+              "column_name": "Description"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            },
+            {
+              "path": "{Category}",
+              "type": "text",
+              "column_name": "Category"
+            }
+          ]
+        }
+      ],
+      "constraint": [
+        "{Trans. Date}",
+        "{Post Date}",
+        "{Description}"
+      ],
+      "loading_function": "csv"
+    },
+    {
+      "name": "lowes",
+      "source": "client_file",
+      "schemas": [
+        {
+          "name": "default",
+          "columns": [
+            {
+              "path": "{Transaction Date}",
+              "type": "date",
+              "column_name": "Transaction Date"
+            },
+            {
+              "path": "{Posting Date}",
+              "type": "date",
+              "column_name": "Posting Date"
+            },
+            {
+              "path": "{Reference Number}",
+              "type": "text",
+              "column_name": "Reference Number"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            },
+            {
+              "path": "{Description}",
+              "type": "text",
+              "column_name": "Description"
+            }
+          ]
+        }
+      ],
+      "constraint": [
+        "{Reference Number}"
+      ],
+      "loading_function": "csv"
+    },
+    {
+      "name": "new_hunt",
+      "source": "client_file",
+      "schemas": [
+        {
+          "name": "default",
+          "columns": [
+            {
+              "path": "{Description}",
+              "type": "text",
+              "column_name": "Description"
+            },
+            {
+              "path": "{Category}",
+              "type": "text",
+              "column_name": "Category"
+            },
+            {
+              "path": "{Institution}",
+              "type": "text",
+              "column_name": "Institution"
+            },
+            {
+              "path": "{Account}",
+              "type": "text",
+              "column_name": "Account"
+            },
+            {
+              "path": "{Currency}",
+              "type": "text",
+              "column_name": "Currency"
+            },
+            {
+              "path": "{Amount}",
+              "type": "numeric",
+              "column_name": "Amount"
+            },
+            {
+              "path": "{Date}",
+              "type": "date",
+              "column_name": "Date"
+            },
+            {
+              "path": "{Split}",
+              "type": "text",
+              "column_name": "Split"
+            },
+            {
+              "path": "{Tags}",
+              "type": "text",
+              "column_name": "Tags"
+            }
+          ]
+        }
+      ],
+      "constraint": [
+        "{Date}",
+        "{Description}"
+      ],
+      "loading_function": "csv"
+    }
+  ]
