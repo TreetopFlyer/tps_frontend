@@ -541,35 +541,52 @@
                 }
             },
             methods:{
+                QueueRemove: function(inObj)
+                {
+                    var i;
+                    for(i=0; i<this.API.RequestLog.length; i++)
+                    {
+                        if(this.API.RequestLog[i].ID == inObj.ID)
+                        {
+                            this.API.RequestLog.splice(i, 1);
+                        }
+                    }
+                },
+                QueueAdd: function(inObj)
+                {
+                    this.API.RequestLog.push(inObj);
+                },
                 CORS: function(inMessage, inURL, inVerb, inSuccessHandler, inBody)
                 {
-                    var context = this;
-                    var log = {
+                    var context;
+                    var log;
+                    var xhr;
+
+                    context = this;
+                    log = {
                         ID:Math.random(),
                         Message:inMessage
                     };
+                    this.QueueAdd(log);
 
-                    context.API.RequestLog.push(log);
-
-                    var xhr = new XMLHttpRequest();
+                    xhr = new XMLHttpRequest();
                     if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
                     xhr.open(inVerb, inURL);
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.onload = function(request){
-                        
-                        var i;
-                        for(i=0; i<context.API.RequestLog.length; i++)
-                        {
-                            if(context.API.RequestLog[i].ID == log.ID)
-                            {
-                                context.API.RequestLog.splice(i, 1);
-                            }
-                        }
-                        
-                        var response = request.currentTarget.response || request.target.responseText;
+                    xhr.onload = function(request)
+                    { 
+                        var response;
+
+                        context.QueueRemove(log);
+                        response = request.currentTarget.response || request.target.responseText;
                         console.log(response);
                         inSuccessHandler.call(context, response);
+                    };
+                    xhr.onerror = function()
+                    {
+                        console.log("xhr error");
+                        context.QueueRemove(log);
                     };
                     xhr.send(inBody);
                     return xhr;
@@ -582,14 +599,14 @@
                         this.HistoryPush("Download");
                     });
                 },
-                SourceUpload: function()
+                SourceUpload: function(inIndex)
                 {
                     this.HistoryPush("Upload");
                     this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
                     {
                         alert(inResponse);
                     },
-                    this.HistoryCurrent().Data);
+                    JSON.stringify(this.API.Sources[inIndex]));
                 },
                 HistoryPush: function(inType)
                 {
