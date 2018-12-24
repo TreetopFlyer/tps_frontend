@@ -599,14 +599,14 @@
                         this.HistoryPush("Download");
                     });
                 },
-                SourceUpload: function(inIndex)
+                SourceUpload: function()
                 {
                     this.HistoryPush("Upload");
                     this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
                     {
                         alert(inResponse);
                     },
-                    JSON.stringify(this.API.Sources[inIndex]));
+                    JSON.stringify(this.API.Sources));
                 },
                 HistoryPush: function(inType)
                 {
