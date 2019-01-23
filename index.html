@@ -6,49 +6,64 @@
     <body>
         <div id="App">
             <div v-for="(source, index) in API.Sources">
-                <tps-source :source="source" :index="index" :list="API.Sources"/>
+                <tps-source :object="source" :index="index" :list="API.Sources"/>
             </div>
         </div>
     </body>
 
+    <!-- mixin crud -->
+    <script>
+    var MixinCRUD = {
+        props:["object", "index", "list"],
+        data:function()
+        {
+            return {
+                clone:{}
+            };
+        },
+        methods:{
+            Clone:function()
+            {
+                this.clone = JSON.parse(JSON.stringify(this.object));
+            },
+            Create:function(inObject)
+            {
+                this.list.push(this.clone);
+            },
+            Duplicate:function()
+            {
+                this.list.splice(this.index, 0, this.object);
+            },
+            Update:function()
+            {
+                this.list.splice(this.index, 1, this.clone);
+            },
+            Delete:function()
+            {
+                this.list.splice(this.index, 1);
+            }
+        }
+    }
+    </script>
 
     <!-- component tps-source -->
     <script>
     Vue.component("tps-source", {
-        props:["source", "index", "list", "method"],
+        mixins:[MixinCRUD],
         template:"#template-tps-source",
-        methods:{
-            Create:function(inObject, inArray)
-            {
-                inArray.push(inObject);
-            },
-            Duplicate:function(inIndex, inArray)
-            {
-                inArray.splice(inIndex, 0, inArray[inIndex]);
-            },
-            Update:function(inObject, inIndex, inArray)
-            {
-                inArray.splice(inIndex, 1, inObject);
-            },
-            Delete:function(inIndex, inArray)
-            {
-                inArray.splice(inIndex, 1);
-            }
-        }
     });
     </script>
     <script type="text/x-template" id="template-tps-source">
         <div>
             <strong>{{index}}</strong>
             <div>
-                {{source.name}} | {{source.data}}
+                {{object.name}} | {{object.data}}
             </div>
-            <button v-on:click="Create(source, list)">create new</button>
-            <button v-on:click="Delete(index, list)">delete</button>
-            <button v-on:click="Duplicate(index, list)">duplicate</button>
-            <button v-on:click="Update({name:name, data:Math.random()}, index, list)">update</button>
+            <button v-on:click="Create">create new</button>
+            <button v-on:click="Delete">delete</button>
+            <button v-on:click="Duplicate">duplicate</button>
+            <button v-on:click="Update">update</button>
         </div>
-        
     </script>
 
     <!-- application -->
@@ -65,20 +80,6 @@
                             data: 54
                         }
                     ]
-                }
-            },
-            methods:{
-                HandlerCreate: function(inObject, inArray)
-                {
-                    console.log(inObject, inArray);
-                    inArray.push({
-                        name:"totally new",
-                        data: Math.random()
-                    });
-                },
-                HandlerDelete: function(inIndex, inArray)
-                {
-                    inArray.splice(inIndex, 1);
                 }
             }
         });
