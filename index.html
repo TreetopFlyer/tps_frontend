@@ -13,9 +13,10 @@
     <body>
         <div id="App">
             <type-editor
-            :default-settings="{name:'default', data:7, children:[]}"
-            :list="Model.Sources"
-            data-type="type-source"></type-editor>
+                :default-settings="{name:'default', data:7, children:[]}"
+                :list="Model.Sources"
+                data-type="type-source">
+            </type-editor>
         </div>
     </body>
 
@@ -53,7 +54,6 @@
         }
     }
     </script>
-
     <!-- editor-->
     <script>
     Vue.component("editor", {
@@ -88,6 +88,10 @@
         {
             console.log("editor mounted");
             this.Clone();
+            if(this.list.length == 0)
+            {
+                this.Create();
+            }
         },
         template:"#TemplateBaseEditor"
     });
@@ -118,7 +122,6 @@
             </div>
         </div>
     </script>
-
     <!-- editor array -->
     <script>
         Vue.component("type-editor", {
@@ -159,6 +162,37 @@
             <div v-if="write">
                 <input type="text" v-model="object.name"/>
                 <input type="number" v-model="object.data"/>
+                <type-editor
+                    :default-settings="{name:'child', type:'csv', active:false}"
+                    :list="object.children"
+                    data-type="type-child">
+                </type-editor>
+            </div>
+            <div>
+
+            </div>
+        </div>
+    </script>
+    <!-- Data Type: Child -->
+    <script>
+        Vue.component("type-child", {
+            mixins:[MixinDataType],
+            template:"#TemplateDataTypeChild"
+        });
+    </script>
+    <script id="TemplateDataTypeChild" type="text/x-template">
+        <div>
+            <div v-if="read">
+                <h3>{{object.name}} | {{object.type}} | {{object.active}} </h3>
+            </div>
+            <div v-if="write">
+                <input type="text" v-model="object.name"/>
+                <select v-model="object.type">
+                    <option>JSON</option>
+                    <option>XML</option>
+                    <option>CSV</option>
+                </select>
+                <input type="checkbox" v-model="object.active"/>
             </div>
         </div>
     </script>
@@ -203,19 +237,7 @@
                     ]
                 },
                 Model:{
-                    Sources:[
-                        {
-                            name:"gjgpjegpseg",
-                            data: 54,
-                            children:[
-                                {
-                                    name:"apgiespgse",
-                                    type:"json",
-                                    active:false
-                                }
-                            ]
-                        }
-                    ]
+                    Sources:[]
                 }
             }
         });
