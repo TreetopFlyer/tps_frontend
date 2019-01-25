@@ -53,6 +53,52 @@
     }
     </script>
 
+    <!-- editor-->
+    <script>
+    Vue.component("edit-editor", {
+        props:{
+            create:{default: false},
+            edit:{default: false}
+        },
+        methods:{
+            HandlerSubmit:function()
+            {
+                if(this.create)
+                {
+                    this.$emit('create');
+                }
+                if(this.edit)
+                {
+                    this.$emit('update');
+                }
+            }
+        },
+        template:"#TemplateBaseEditor"
+    });
+    </script>
+    <script id="TemplateBaseEditor" type="text/x-template">
+        <div>
+            <form v-show="create || edit" v-on:submit.prevent="HandlerSubmit">
+                <slot name="write"></slot>
+                <div class="Controls" v-if="create">
+                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> <span>Create</span></button>
+                </div>
+                <div class="Controls" v-else>
+                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> <span>Update</span></button>
+                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> <span>Cancel</span></button>
+                </div>
+            </form>
+            <div v-show="!create && !edit">
+                <div class="Controls">
+                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> <span>Edit</span></button>
+                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> <span>Duplicate</span></button>
+                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> <span>Delete</span></button>
+                </div>
+                <slot name="read"></slot>
+            </div>
+        </div>
+    </script>
+
     <!-- component tps-source -->
     <script>
     Vue.component("tps-source", {
@@ -78,23 +124,23 @@
 
     <!-- component child -->
     <script>
-        Vue.component("tps-child", {
-            mixins:[MixinCRUD],
-            template:"#template-tps-child",
-        });
-        </script>
-        <script type="text/x-template" id="template-tps-child">
-            <div class="Block Child">
-                <strong>{{index}}</strong>
-                <div>
-                    {{object.name}} | {{object.type}} | {{object.active}}
-                </div>
-                <button v-on:click="Create">create new</button>
-                <button v-on:click="Delete">delete</button>
-                <button v-on:click="Duplicate">duplicate</button>
-                <button v-on:click="Update">update</button>
+    Vue.component("tps-child", {
+        mixins:[MixinCRUD],
+        template:"#template-tps-child",
+    });
+    </script>
+    <script type="text/x-template" id="template-tps-child">
+        <div class="Block Child">
+            <strong>{{index}}</strong>
+            <div>
+                {{object.name}} | {{object.type}} | {{object.active}}
             </div>
-        </script>
+            <button v-on:click="Create">create new</button>
+            <button v-on:click="Delete">delete</button>
+            <button v-on:click="Duplicate">duplicate</button>
+            <button v-on:click="Update">update</button>
+        </div>
+    </script>
 
     <!-- application -->
     <script>
