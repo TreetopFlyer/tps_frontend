@@ -12,7 +12,10 @@
     </head>
     <body>
         <div id="App">
-            <type-editor :default-settings="{name:'default', data:7, children:[]}" :list="Model.Sources" data-type="type-source"></type-editor>
+            <type-editor
+            :default-settings="{name:'default', data:7, children:[]}"
+            :list="Model.Sources"
+            data-type="type-source"></type-editor>
         </div>
     </body>
 
@@ -56,7 +59,8 @@
     Vue.component("editor", {
         mixins:[MixinCRUD],
         props:{
-            create:{default: false}
+            create:{default: false},
+            dataType:{default:""}
         },
         data:function()
         {
@@ -91,14 +95,13 @@
     <script id="TemplateBaseEditor" type="text/x-template">
         <div class="Editor">
             <form v-if="create" v-on:submit.prevent="Create">
-                <slot name="write" :object="clone">
-                </slot>
+                <component :is="dataType" :write="true" :object="clone"></component>
                 <div class="Controls">
                     <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
             </form>
             <form v-if="edit" v-on:submit.prevent="Update">
-                <slot name="write" :object="clone">
+                <component :is="dataType" :write="true" :object="clone"></component>
                 </slot>
                 <div class="Controls">
                     <button v-on:click.prevent="EditSave">  <i class="icon icon-save"></i>       <span>Update</span></button>
@@ -111,7 +114,7 @@
                     <button v-on:click.prevent="Duplicate"><i class="icon icon-copy"></i>        <span>Duplicate</span></button>
                     <button v-on:click.prevent="Delete">   <i class="icon icon-trash-2"></i>     <span>Delete</span></button>
                 </div>
-                <slot name="read" :object="object"></slot>
+                <component :is="dataType" :read="true" :object="object"></component>
             </div>
         </div>
     </script>
@@ -125,20 +128,9 @@
     </script>
     <script id="TemplateTypeEditor" type="text/x-template">
         <div>
-            <editor create="true" :object="defaultSettings" :list="list">
-                <template slot="write" slot-scope="context">
-                    <component v-bind:is="dataType" write="true" :object="context.object"></component>
-                </template>
-            </editor>
+            <editor create="true" :object="defaultSettings" :list="list" :data-type="dataType"></editor>
             <hr>
-            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list">
-                <template slot="read" slot-scope="context">
-                    <component v-bind:is="dataType" read="true" :object="context.object"></component>
-                </template>
-                <template slot="write" slot-scope="context">
-                    <component v-bind:is="dataType" write="true" :object="context.object"></component>
-                </template>
-            </editor>
+            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list" :data-type="dataType"></editor>
         </div>
     </script>
 
