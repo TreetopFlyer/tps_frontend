@@ -12,22 +12,7 @@
     </head>
     <body>
         <div id="App">
-            <editor create="true" :object="{name:'default', data:7}" :list="API.Sources">
-                <template slot="write" slot-scope="context">
-                    <input type="text" v-model="context.object.name"/>
-                </template>
-            </editor>
-            <hr>
-            <div v-for="(source, index) in API.Sources">
-                <editor :object="source" :index="index" :list="API.Sources">
-                    <template slot="read" slot-scope="context">
-                        <h3>hey: {{context.object.name}}</h3>
-                    </template>
-                    <template slot="write" slot-scope="context">
-                        <input type="text" v-model="context.object.name"/>
-                    </template>
-                </editor>
-            </div>
+            <type-editor :default-settings="{name:'default', data:7}" :list="API.Sources"></type-editor>
         </div>
     </body>
 
@@ -105,14 +90,14 @@
     </script>
     <script id="TemplateBaseEditor" type="text/x-template">
         <div class="Editor">
-            <form v-show="create" v-on:submit.prevent="Create">
+            <form v-if="create" v-on:submit.prevent="Create">
                 <slot name="write" :object="clone">
                 </slot>
                 <div class="Controls">
                     <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
             </form>
-            <form v-show="edit" v-on:submit.prevent="Update">
+            <form v-if="edit" v-on:submit.prevent="Update">
                 <slot name="write" :object="clone">
                 </slot>
                 <div class="Controls">
@@ -120,7 +105,7 @@
                     <button v-on:click.prevent="EditCancel"><i class="icon icon-slash"></i>      <span>Cancel</span></button>
                 </div>
             </form>
-            <div v-show="!create && !edit">
+            <div v-if="!create && !edit">
                 <div class="Controls">
                     <button v-on:click.prevent="EditStart"><i class="icon icon-edit"></i>        <span>Edit</span></button>
                     <button v-on:click.prevent="Duplicate"><i class="icon icon-copy"></i>        <span>Duplicate</span></button>
@@ -131,49 +116,38 @@
         </div>
     </script>
 
-    <!-- component tps-source -->
+    <!-- editor array -->
     <script>
-    Vue.component("tps-source", {
-        mixins:[MixinCRUD],
-        template:"#template-tps-source",
-    });
+        Vue.component("type-editor", {
+            props:["defaultSettings", "list"],
+            template:"#TemplateTypeEditor"
+        });
     </script>
-    <script type="text/x-template" id="template-tps-source">
-        <div class="Block Source">
-            <strong>{{index}}</strong>
-            <div>
-                {{object.name}} | {{object.data}}
-            </div>
-            <button v-on:click="Create">create new</button>
-            <button v-on:click="Delete">delete</button>
-            <button v-on:click="Duplicate">duplicate</button>
-            <button v-on:click="Update">update</button>
-            <div>
-                <tps-child v-for="(childObject, childIndex) in object.children" :object="childObject" :index="childIndex" :list="object.children"></tps-child>
-            </div>
+    <script id="TemplateTypeEditor" type="text/x-template">
+        <div>
+            <editor create="true" :object="defaultSettings" :list="list">
+                <template slot="write" slot-scope="context">
+                    <input type="text" v-model="context.object.name"/>
+                </template>
+            </editor>
+            <hr>
+            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list">
+                <template slot="read" slot-scope="context">
+                    <h3>hey: {{context.object.name}}</h3>
+                </template>
+                <template slot="write" slot-scope="context">
+                    <input type="text" v-model="context.object.name"/>
+                </template>
+            </editor>
         </div>
     </script>
 
-    <!-- component child -->
+    <!-- Data Type: Source -->
     <script>
-    Vue.component("tps-child", {
-        mixins:[MixinCRUD],
-        template:"#template-tps-child",
-    });
     </script>
-    <script type="text/x-template" id="template-tps-child">
-        <div class="Block Child">
-            <strong>{{index}}</strong>
-            <div>
-                {{object.name}} | {{object.type}} | {{object.active}}
-            </div>
-            <button v-on:click="Create">create new</button>
-            <button v-on:click="Delete">delete</button>
-            <button v-on:click="Duplicate">duplicate</button>
-            <button v-on:click="Update">update</button>
-        </div>
+    <script>
     </script>
-
+    
     <!-- application -->
     <script>
         var App = new Vue({
