@@ -12,7 +12,7 @@
     </head>
     <body>
         <div id="App">
-            <type-editor :default-settings="{name:'default', data:7, children:[]}" :list="API.Sources" data-type="type-source"></type-editor>
+            <type-editor :default-settings="{name:'default', data:7, children:[]}" :list="Model.Sources" data-type="type-source"></type-editor>
         </div>
     </body>
 
@@ -170,15 +170,47 @@
             </div>
         </div>
     </script>
-    
+
+    <!-- leafs -->
+    <script>
+    Vue.component("field-text", {
+        props:["definition"],
+        template:"#TemplateFieldText"
+    })
+    </script>
+    <script id="TemplateFieldText" type="text/x-template">
+        <div>
+            <label></label>
+        </div>
+    </script>
+
     <!-- application -->
     <script>
+        /*
+        api endpoints:
+        - Type
+        - Load
+        - Save
+        */
         var App = new Vue({
             el:"#App",
             data:{
-                API:{
-                    Domain:'//localhost:80',
-                    RequestLog:[],
+                Type:{
+                    Sources:[
+                        {
+                            name:{type:"string", default:"new source"},
+                            data:{type:"number", default:"1"},
+                            children:[
+                                {
+                                    name:{type:"string", default:"new child"},
+                                    type:{type:"json|xml|csv", default:"json"},
+                                    active:{type:"boolean", default:"false"}
+                                }
+                            ]
+                        }
+                    ]
+                },
+                Model:{
                     Sources:[
                         {
                             name:"gjgpjegpseg",
