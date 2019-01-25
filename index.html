@@ -12,7 +12,7 @@
     </head>
     <body>
         <div id="App">
-            <type-editor :default-settings="{name:'default', data:7}" :list="API.Sources"></type-editor>
+            <type-editor :default-settings="{name:'default', data:7, children:[]}" :list="API.Sources" data-type="type-source"></type-editor>
         </div>
     </body>
 
@@ -127,16 +127,16 @@
         <div>
             <editor create="true" :object="defaultSettings" :list="list">
                 <template slot="write" slot-scope="context">
-                    <input type="text" v-model="context.object.name"/>
+                    <component v-bind:is="dataType" write="true" :object="context.object"></component>
                 </template>
             </editor>
             <hr>
             <editor v-for="(object, index) in list" :object="object" :index="index" :list="list">
                 <template slot="read" slot-scope="context">
-                    <h3>hey: {{context.object.name}}</h3>
+                    <component v-bind:is="dataType" read="true" :object="context.object"></component>
                 </template>
                 <template slot="write" slot-scope="context">
-                    <input type="text" v-model="context.object.name"/>
+                    <component v-bind:is="dataType" write="true" :object="context.object"></component>
                 </template>
             </editor>
         </div>
@@ -145,12 +145,16 @@
     <!-- mixin DataType-->
     <script>
     var MixinDataType = {
-        props:["read", "write", "object"]
+        props:{
+            read:{default:false},
+            write:{default:false},
+            object:{default:function(){return {};}}
+        }
     }
     </script>
     <!-- Data Type: Source -->
     <script>
-    Vue.component("source", {
+    Vue.component("type-source", {
         mixins:[MixinDataType],
         template:"#TemplateDataTypeSource"
     });
