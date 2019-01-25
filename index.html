@@ -16,7 +16,7 @@
         </div>
     </body>
 
-    <!-- mixin crud -->
+    <!-- mixin CRUD -->
     <script>
     var MixinCRUD = {
         props:["object", "index", "list"],
@@ -119,7 +119,7 @@
     <!-- editor array -->
     <script>
         Vue.component("type-editor", {
-            props:["defaultSettings", "list"],
+            props:["defaultSettings", "list", "dataType"],
             template:"#TemplateTypeEditor"
         });
     </script>
@@ -142,10 +142,29 @@
         </div>
     </script>
 
+    <!-- mixin DataType-->
+    <script>
+    var MixinDataType = {
+        props:["read", "write", "object"]
+    }
+    </script>
     <!-- Data Type: Source -->
     <script>
+    Vue.component("source", {
+        mixins:[MixinDataType],
+        template:"#TemplateDataTypeSource"
+    });
     </script>
-    <script>
+    <script id="TemplateDataTypeSource" type="text/x-template">
+        <div>
+            <div v-if="read">
+                <h3>{{object.name}} | {{object.data}}</h3>
+            </div>
+            <div v-if="write">
+                <input type="text" v-model="object.name"/>
+                <input type="number" v-model="object.data"/>
+            </div>
+        </div>
     </script>
     
     <!-- application -->
