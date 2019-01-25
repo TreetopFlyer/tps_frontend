@@ -3,7 +3,7 @@
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
         <style>
-            .Block
+            .Editor
             {
                 padding:1em;
                 border:1px solid #aaa;
@@ -12,8 +12,21 @@
     </head>
     <body>
         <div id="App">
+            <editor create="true" :object="{name:'default', data:7}" :list="API.Sources">
+                <template slot="write" slot-scope="context">
+                    <input type="text" v-model="context.object.name"/>
+                </template>
+            </editor>
+            <hr>
             <div v-for="(source, index) in API.Sources">
-                <tps-source :object="source" :index="index" :list="API.Sources"/>
+                <editor :object="source" :index="index" :list="API.Sources">
+                    <template slot="read" slot-scope="context">
+                        <h3>hey: {{context.object.name}}</h3>
+                    </template>
+                    <template slot="write" slot-scope="context">
+                        <input type="text" v-model="context.object.name"/>
+                    </template>
+                </editor>
             </div>
         </div>
     </body>
@@ -33,9 +46,9 @@
             {
                 this.clone = JSON.parse(JSON.stringify(this.object));
             },
-            Create:function(inObject)
+            Create:function()
             {
-                this.list.push(this.clone);
+                this.list.push(JSON.parse(JSON.stringify(this.clone)));
             },
             Duplicate:function()
             {
@@ -55,46 +68,65 @@
 
     <!-- editor-->
     <script>
-    Vue.component("edit-editor", {
+    Vue.component("editor", {
+        mixins:[MixinCRUD],
         props:{
-            create:{default: false},
-            edit:{default: false}
+            create:{default: false}
+        },
+        data:function()
+        {
+            return {
+                edit:false
+            }
         },
         methods:{
-            HandlerSubmit:function()
+            EditStart:function()
             {
-                if(this.create)
-                {
-                    this.$emit('create');
-                }
-                if(this.edit)
-                {
-                    this.$emit('update');
-                }
+                this.Clone();
+                this.edit = true;
+            },
+            EditCancel:function()
+            {
+                this.edit = false;
+            },
+            EditSave:function()
+            {
+                this.Update();
+                this.edit = false;
             }
+        },
+        mounted:function()
+        {
+            console.log("editor mounted");
+            this.Clone();
         },
         template:"#TemplateBaseEditor"
     });
     </script>
     <script id="TemplateBaseEditor" type="text/x-template">
-        <div>
-            <form v-show="create || edit" v-on:submit.prevent="HandlerSubmit">
-                <slot name="write"></slot>
-                <div class="Controls" v-if="create">
-                    <button v-on:click.prevent="$emit('create')"><i class="icon icon-plus-circle"></i> <span>Create</span></button>
+        <div class="Editor">
+            <form v-show="create" v-on:submit.prevent="Create">
+                <slot name="write" :object="clone">
+                </slot>
+                <div class="Controls">
+                    <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
-                <div class="Controls" v-else>
-                    <button v-on:click.prevent="$emit('update')"><i class="icon icon-save"></i> <span>Update</span></button>
-                    <button v-on:click.prevent="$emit('cancel')"><i class="icon icon-slash"></i> <span>Cancel</span></button>
+            </form>
+            <form v-show="edit" v-on:submit.prevent="Update">
+                <slot name="write" :object="clone">
+                </slot>
+                <div class="Controls">
+                    <button v-on:click.prevent="EditSave">  <i class="icon icon-save"></i>       <span>Update</span></button>
+                    <button v-on:click.prevent="EditCancel"><i class="icon icon-slash"></i>      <span>Cancel</span></button>
                 </div>
             </form>
             <div v-show="!create && !edit">
                 <div class="Controls">
-                    <button v-on:click.prevent="$emit('edit')"><i class="icon icon-edit"></i> <span>Edit</span></button>
-                    <button v-on:click.prevent="$emit('duplicate')"><i class="icon icon-copy"></i> <span>Duplicate</span></button>
-                    <button v-on:click.prevent="$emit('delete')"><i class="icon icon-trash-2"></i> <span>Delete</span></button>
+                    <button v-on:click.prevent="EditStart"><i class="icon icon-edit"></i>        <span>Edit</span></button>
+                    <button v-on:click.prevent="Duplicate"><i class="icon icon-copy"></i>        <span>Duplicate</span></button>
+                    <button v-on:click.prevent="Delete">   <i class="icon icon-trash-2"></i>     <span>Delete</span></button>
                 </div>
-                <slot name="read"></slot>
+                <slot name="read" :object="object"></slot>
             </div>
         </div>
     </script>
