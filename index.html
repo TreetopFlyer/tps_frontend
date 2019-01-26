@@ -12,11 +12,7 @@
     </head>
     <body>
         <div id="App">
-            <type-editor
-                :default-settings="{name:'default', data:7, children:[]}"
-                :list="Model.Sources"
-                data-type="type-source">
-            </type-editor>
+            <type-root :object="Model"></type-root>
         </div>
     </body>
 
@@ -51,7 +47,16 @@
             {
                 this.list.splice(this.index, 1);
             }
-        }
+        },
+        mounted:function()
+        {
+            console.log("editor mounted");
+            this.Clone();
+            if(this.list.length == 0)
+            {
+                this.Create();
+            }
+        },
     }
     </script>
     <!-- editor-->
@@ -84,15 +89,6 @@
                 this.edit = false;
             }
         },
-        mounted:function()
-        {
-            console.log("editor mounted");
-            this.Clone();
-            if(this.list.length == 0)
-            {
-                this.Create();
-            }
-        },
         template:"#TemplateBaseEditor"
     });
     </script>
@@ -105,12 +101,11 @@
                 </div>
             </form>
             <form v-if="edit" v-on:submit.prevent="Update">
-                <component :is="dataType" :write="true" :object="clone"></component>
-                </slot>
                 <div class="Controls">
                     <button v-on:click.prevent="EditSave">  <i class="icon icon-save"></i>       <span>Update</span></button>
                     <button v-on:click.prevent="EditCancel"><i class="icon icon-slash"></i>      <span>Cancel</span></button>
                 </div>
+                <component :is="dataType" :write="true" :object="clone"></component>
             </form>
             <div v-if="!create && !edit">
                 <div class="Controls">
@@ -137,6 +132,7 @@
         </div>
     </script>
 
+
     <!-- mixin DataType-->
     <script>
     var MixinDataType = {
@@ -146,6 +142,20 @@
             object:{default:function(){return {};}}
         }
     }
+    </script>
+    <!-- Data Type: Root -->
+    <script>
+    Vue.component("type-root", {
+        mixins:[MixinDataType],
+        template:"#TemplateDataTypeRoot"
+    });
+    </script>
+    <script id="TemplateDataTypeRoot" type="text/x-template">
+        <type-editor
+            :default-settings="{name:'default', data:7, children:[]}"
+            :list="object.Sources"
+            data-type="type-source">
+        </type-editor>
     </script>
     <!-- Data Type: Source -->
     <script>
@@ -160,16 +170,13 @@
                 <h3>{{object.name}} | {{object.data}}</h3>
             </div>
             <div v-if="write">
-                <input type="text" v-model="object.name"/>
-                <input type="number" v-model="object.data"/>
+                <component is="leaf-string" v-model="object.name" display="Name"></component>
+                <component is="leaf-number" v-model="object.data" display="Data"></component>
                 <type-editor
                     :default-settings="{name:'child', type:'csv', active:false}"
                     :list="object.children"
                     data-type="type-child">
                 </type-editor>
-            </div>
-            <div>
-
             </div>
         </div>
     </script>
@@ -186,27 +193,65 @@
                 <h3>{{object.name}} | {{object.type}} | {{object.active}} </h3>
             </div>
             <div v-if="write">
-                <input type="text" v-model="object.name"/>
+                <component is="leaf-string" v-model="object.name" display="Name"></component>
                 <select v-model="object.type">
                     <option>JSON</option>
                     <option>XML</option>
                     <option>CSV</option>
                 </select>
-                <input type="checkbox" v-model="object.active"/>
+                <component is="leaf-boolean" v-model="object.active" display="Active"></component>
             </div>
         </div>
     </script>
 
-    <!-- leafs -->
+
+    <!-- leaves -->
     <script>
-    Vue.component("field-text", {
-        props:["definition"],
-        template:"#TemplateFieldText"
-    })
+    var MixinLeaf = {
+        props:{
+            display:{default:"Field"},
+            value:{default:"-empty-"},
+            edit:{default:false}
+        },
+        methods:{
+            Dispatch:function(inEvent){ this.$emit("input", inEvent.target.value); }
+        }
+    };
     </script>
-    <script id="TemplateFieldText" type="text/x-template">
+    <script>
+    Vue.component("leaf-string", {
+        mixins:[MixinLeaf],
+        template:"#TemplateLeafString"
+    });
+    </script>
+    <script id="TemplateLeafString" type="text/x-template">
         <div>
-            <label></label>
+            <label>{{display}}</label>
+            <input :value="value" v-on:input="Dispatch" type="text">
+        </div>
+    </script>
+    <script>
+    Vue.component("leaf-number", {
+        mixins:[MixinLeaf],
+        template:"#TemplateLeafNumber"
+    });
+    </script>
+    <script id="TemplateLeafNumber" type="text/x-template">
+        <div>
+            <label>{{display}}</label>
+            <input :value="value" v-on:input="Dispatch" type="number">
+        </div>
+    </script>
+    <script>
+    Vue.component("leaf-boolean", {
+        mixins:[MixinLeaf],
+        template:"#TemplateLeafBoolean"
+    });
+    </script>
+    <script id="TemplateLeafBoolean" type="text/x-template">
+        <div>
+            <label>{{display}}</label>
+            <input :value="value" v-on:change="Dispatch" type="checkbox">
         </div>
     </script>
 
