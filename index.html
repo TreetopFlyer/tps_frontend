@@ -12,7 +12,7 @@
     </head>
     <body>
         <div id="App">
-            <type-root :object="Model"></type-root>
+            <type-dynamic :read="true" :object="Model" :definition="Schema"></type-dynamic>
         </div>
     </body>
 
@@ -65,7 +65,8 @@
         mixins:[MixinCRUD],
         props:{
             create:{default: false},
-            dataType:{default:""}
+            dataType:{default:""},
+            definition:Object
         },
         data:function()
         {
@@ -95,7 +96,7 @@
     <script id="TemplateBaseEditor" type="text/x-template">
         <div class="Editor">
             <form v-if="create" v-on:submit.prevent="Create">
-                <component :is="dataType" :write="true" :object="clone"></component>
+                <component :is="dataType" :write="true" :object="clone" :definition="definition"></component>
                 <div class="Controls">
                     <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
@@ -105,7 +106,7 @@
                     <button v-on:click.prevent="EditSave">  <i class="icon icon-save"></i>       <span>Update</span></button>
                     <button v-on:click.prevent="EditCancel"><i class="icon icon-slash"></i>      <span>Cancel</span></button>
                 </div>
-                <component :is="dataType" :write="true" :object="clone"></component>
+                <component :is="dataType" :write="true" :object="clone" :definition="definition"></component>
             </form>
             <div v-if="!create && !edit">
                 <div class="Controls">
@@ -113,22 +114,22 @@
                     <button v-on:click.prevent="Duplicate"><i class="icon icon-copy"></i>        <span>Duplicate</span></button>
                     <button v-on:click.prevent="Delete">   <i class="icon icon-trash-2"></i>     <span>Delete</span></button>
                 </div>
-                <component :is="dataType" :read="true" :object="object"></component>
+                <component :is="dataType" :read="true" :object="object" :definition="definition"></component>
             </div>
         </div>
     </script>
     <!-- editor array -->
     <script>
         Vue.component("type-editor", {
-            props:["defaultSettings", "list", "dataType"],
+            props:["defaultSettings", "list", "dataType", "definition"],
             template:"#TemplateTypeEditor"
         });
     </script>
     <script id="TemplateTypeEditor" type="text/x-template">
         <div>
-            <editor create="true" :object="defaultSettings" :list="list" :data-type="dataType"></editor>
+            <editor create="true" :object="defaultSettings" :list="list" :data-type="dataType" :definition="definition"></editor>
             <hr>
-            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list" :data-type="dataType"></editor>
+            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list" :data-type="dataType" :definition="definition" ></editor>
         </div>
     </script>
 
@@ -199,6 +200,66 @@
             </div>
         </div>
     </script>
+    <!-- Data Type: Dynamic -->
+    <script>
+    Vue.component("type-dynamic", {
+        mixins:[MixinDataType],
+        props:{definition:Object},
+        computed:{
+            Schema:function()
+            {
+                var key, value;
+                var output;
+                output = {
+                    Leaves:[],
+                    Branches:[]
+                };
+                for(key in this.definition)
+                {
+                    value = this.definition[key];
+                    value.key = key;
+                    if(typeof value.display === "undefined")
+                    {
+                        // if theres no display value, use the key
+                        value.display = key;
+                    }
+                    if(value.type == "array")
+                    {
+                        output.Branches.push(value);
+                    }
+                    else
+                    {
+                        output.Leaves.push(value);
+                    }
+                }
+                return output;
+            }
+        },
+        template:"#TemplateDataTypeDynamic"
+    })
+    </script>
+    <script id="TemplateDataTypeDynamic" type="text/x-template">
+        <div>
+            <div v-if="write">
+                <component
+                    v-for="leaf in Schema.Leaves"
+                    :is="'leaf-'+leaf.type"
+                    v-model="object[leaf.key]"
+                    :display="leaf.display"
+                    :settings="leaf.settings"></component>
+            </div>
+            <div v-if="read">
+                <div v-for="leaf in Schema.Leaves">{{object[leaf.key]}}</div>
+                <type-editor
+                    v-for="branch in Schema.Branches"
+                    data-type="type-dynamic"
+                    :default-settings="branch.default"
+                    :list="object[branch.key]"
+                    :definition="branch.settings"></type-editor>
+            </div>
+        </div>
+
+    </script>
 
 
     <!-- mixin Leaves -->
@@ -207,8 +268,7 @@
         props:{
             display:{default:"Field"},
             value:{default:"-empty-"},
-            edit:{default:false},
-            settings:Object
+            settings:[Object, Array]
         },
         methods:{
             Dispatch:function(inEvent){ this.$emit("input", inEvent.target.value); }
@@ -280,24 +340,30 @@
         */
         var App = new Vue({
             el:"#App",
-            data:{
-                Type:{
-                    Sources:[
-                        {
-                            name:{type:"string", default:"new source"},
-                            data:{type:"number", default:"1"},
-                            children:[
-                                {
-                                    name:{type:"string", default:"new child"},
-                                    type:{type:"json|xml|csv", default:"json"},
-                                    active:{type:"boolean", default:"false"}
-                                }
-                            ]
-                        }
-                    ]
+            data:
+            {
+                Schema:
+                {
+                    thing:{type:"string", default:"hey"},
+                    members:{type:"array", default:{name:"dn", age:0}, settings:{
+                        name:{type:"string"},
+                        age:{type:"number"}
+                    }}
+                    /*
+                    Sources:{type:"array", default:[], settings:{
+                        name:{type:"string", default:"new source"},
+                        data:{type:"number", default:1},
+                        children:{type:"array", default:[], settings:{
+                            name:{type:"string", default:"new child"},
+                            type:{type:"enum", default:"JSON", settings:["JSON", "CSV", "XML"]},
+                            active:{type:"boolean", default:"false"}
+                        }}
+                    }}
+                    */
                 },
                 Model:{
-                    Sources:[]
+                    thing:"test",
+                    members:[{name:"seth", age:35}]
                 }
             }
         });
