@@ -173,7 +173,7 @@
                 <component is="leaf-string" v-model="object.name" display="Name"></component>
                 <component is="leaf-number" v-model="object.data" display="Data"></component>
                 <type-editor
-                    :default-settings="{name:'child', type:'csv', active:false}"
+                    :default-settings="{name:'child', type:'CSV', active:false}"
                     :list="object.children"
                     data-type="type-child">
                 </type-editor>
@@ -194,30 +194,28 @@
             </div>
             <div v-if="write">
                 <component is="leaf-string" v-model="object.name" display="Name"></component>
-                <select v-model="object.type">
-                    <option>JSON</option>
-                    <option>XML</option>
-                    <option>CSV</option>
-                </select>
+                <component is="leaf-enum" v-model="object.type" display="Type" :settings="['JSON', 'XML', 'CSV']"></component>
                 <component is="leaf-boolean" v-model="object.active" display="Active"></component>
             </div>
         </div>
     </script>
 
 
-    <!-- leaves -->
+    <!-- mixin Leaves -->
     <script>
     var MixinLeaf = {
         props:{
             display:{default:"Field"},
             value:{default:"-empty-"},
-            edit:{default:false}
+            edit:{default:false},
+            settings:Object
         },
         methods:{
             Dispatch:function(inEvent){ this.$emit("input", inEvent.target.value); }
         }
     };
     </script>
+    <!-- Leaf: String -->
     <script>
     Vue.component("leaf-string", {
         mixins:[MixinLeaf],
@@ -230,6 +228,7 @@
             <input :value="value" v-on:input="Dispatch" type="text">
         </div>
     </script>
+    <!-- Leaf: Number -->
     <script>
     Vue.component("leaf-number", {
         mixins:[MixinLeaf],
@@ -242,6 +241,7 @@
             <input :value="value" v-on:input="Dispatch" type="number">
         </div>
     </script>
+    <!-- Leaf: Boolean -->
     <script>
     Vue.component("leaf-boolean", {
         mixins:[MixinLeaf],
@@ -252,6 +252,21 @@
         <div>
             <label>{{display}}</label>
             <input :value="value" v-on:change="Dispatch" type="checkbox">
+        </div>
+    </script>
+    <!-- Leaf: Enum -->
+    <script>
+    Vue.component("leaf-enum", {
+        mixins:[MixinLeaf],
+        template:"#TemplateLeafEnum"
+    });
+    </script>
+    <script id="TemplateLeafEnum" type="text/x-template">
+        <div>
+            <label>{{display}}</label>
+            <select v-on:change="Dispatch" :value="value">
+                <option v-for="option in settings" :value="option" selected="">{{option}}</option>
+            </select>
         </div>
     </script>
 
