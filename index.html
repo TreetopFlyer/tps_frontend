@@ -90,10 +90,10 @@
                 this.edit = false;
             }
         },
-        template:"#TemplateBaseEditor"
+        template:"#TemplateEditor"
     });
     </script>
-    <script id="TemplateBaseEditor" type="text/x-template">
+    <script id="TemplateEditor" type="text/x-template">
         <div class="Editor">
             <form v-if="create" v-on:submit.prevent="Create">
                 <component :is="dataType" :write="true" :object="clone" :definition="definition"></component>
@@ -120,16 +120,18 @@
     </script>
     <!-- editor array -->
     <script>
-        Vue.component("type-editor", {
-            props:["defaultSettings", "list", "dataType", "definition"],
-            template:"#TemplateTypeEditor"
+        Vue.component("editor-array", {
+            props:["defaultSettings", "list", "dataType", "definition"],// defaultSettings are defaults for the create mode form
+            template:"#TemplateEditorArray"
         });
     </script>
-    <script id="TemplateTypeEditor" type="text/x-template">
+    <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <editor create="true" :object="defaultSettings" :list="list" :data-type="dataType" :definition="definition"></editor>
+            <editor create="true"
+            :object="defaultSettings" :list="list" :data-type="dataType" :definition="definition"></editor>
             <hr>
-            <editor v-for="(object, index) in list" :object="object" :index="index" :list="list" :data-type="dataType" :definition="definition" ></editor>
+            <editor v-for="(object, index) in list" :index="index"
+            :object="object"          :list="list" :data-type="dataType" :definition="definition" ></editor> <!---->
         </div>
     </script>
 
@@ -152,11 +154,11 @@
     });
     </script>
     <script id="TemplateDataTypeRoot" type="text/x-template">
-        <type-editor
+        <editor-array
             :default-settings="{name:'default', data:7, children:[]}"
             :list="object.Sources"
             data-type="type-source">
-        </type-editor>
+        </editor-array>
     </script>
     <!-- Data Type: Source -->
     <script>
@@ -173,11 +175,11 @@
             <div v-if="write">
                 <component is="leaf-string" v-model="object.name" display="Name"></component>
                 <component is="leaf-number" v-model="object.data" display="Data"></component>
-                <type-editor
+                <editor-array
                     :default-settings="{name:'child', type:'CSV', active:false}"
                     :list="object.children"
                     data-type="type-child">
-                </type-editor>
+                </editor-array>
             </div>
         </div>
     </script>
@@ -250,12 +252,12 @@
             </div>
             <div v-if="read">
                 <div v-for="leaf in Schema.Leaves">{{object[leaf.key]}}</div>
-                <type-editor
+                <editor-array
                     v-for="branch in Schema.Branches"
                     data-type="type-dynamic"
                     :default-settings="branch.default"
                     :list="object[branch.key]"
-                    :definition="branch.settings"></type-editor>
+                    :definition="branch.settings"></editor-array>
             </div>
         </div>
 
@@ -329,6 +331,19 @@
             </select>
         </div>
     </script>
+    <!-- Lef: Array -->
+    <script>
+    Vue.component("leaf-array", {
+        mixins:[MixinLeaf],
+        template:"#TemplateLeafArray"
+    });
+    </script>
+    <script id="TemplateLeafArray" type="text/x-template">
+        <div>
+            <label>{{display}}</label>
+            <input :value="value" v-on:change="Dispatch" type="checkbox">
+        </div>
+    </script>
 
     <!-- application -->
     <script>
@@ -345,8 +360,8 @@
                 Schema:
                 {
                     thing:{type:"string", default:"hey"},
-                    members:{type:"array", default:{name:"dn", age:0}, settings:{
-                        name:{type:"string"},
+                    members:{type:"array", settings:{
+                        name:{type:"string", default:"dm"},
                         age:{type:"number"}
                     }}
                     /*
