@@ -16,15 +16,32 @@
         </div>
     </body>
 
-    <!-- mixin CRUD -->
+    <!-- editor-->
     <script>
-    var MixinCRUD = {
-        props:["object", "index", "list"],
+    Vue.component("editor", {
+        props:{
+            object:Object,
+            index:Number,
+            list:Array,
+            create:{default: false},
+            templateName:{default:""},
+            definition:Object
+        },
         data:function()
         {
             return {
+                edit:false,
                 clone:{}
-            };
+            }
+        },
+        mounted:function()
+        {
+            console.log("editor mounted");
+            this.Clone();
+            if(this.list.length == 0)
+            {
+                this.Create();
+            }
         },
         methods:{
             Clone:function()
@@ -46,35 +63,8 @@
             Delete:function()
             {
                 this.list.splice(this.index, 1);
-            }
-        },
-        mounted:function()
-        {
-            console.log("editor mounted");
-            this.Clone();
-            if(this.list.length == 0)
-            {
-                this.Create();
-            }
-        },
-    }
-    </script>
-    <!-- editor-->
-    <script>
-    Vue.component("editor", {
-        mixins:[MixinCRUD],
-        props:{
-            create:{default: false},
-            dataType:{default:""},
-            definition:Object
-        },
-        data:function()
-        {
-            return {
-                edit:false
-            }
-        },
-        methods:{
+            },
+            ////////////
             EditStart:function()
             {
                 this.Clone();
@@ -96,7 +86,7 @@
     <script id="TemplateEditor" type="text/x-template">
         <div class="Editor">
             <form v-if="create" v-on:submit.prevent="Create">
-                <component :is="dataType" :write="true" :object="clone" :definition="definition"></component>
+                <component :is="templateName" :write="true" :object="clone" :definition="definition"></component>
                 <div class="Controls">
                     <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
@@ -106,7 +96,7 @@
                     <button v-on:click.prevent="EditSave">  <i class="icon icon-save"></i>       <span>Update</span></button>
                     <button v-on:click.prevent="EditCancel"><i class="icon icon-slash"></i>      <span>Cancel</span></button>
                 </div>
-                <component :is="dataType" :write="true" :object="clone" :definition="definition"></component>
+                <component :is="templateName" :write="true" :object="clone" :definition="definition"></component>
             </form>
             <div v-if="!create && !edit">
                 <div class="Controls">
@@ -114,24 +104,30 @@
                     <button v-on:click.prevent="Duplicate"><i class="icon icon-copy"></i>        <span>Duplicate</span></button>
                     <button v-on:click.prevent="Delete">   <i class="icon icon-trash-2"></i>     <span>Delete</span></button>
                 </div>
-                <component :is="dataType" :read="true" :object="object" :definition="definition"></component>
+                <component :is="templateName" :read="true" :object="object" :definition="definition"></component>
             </div>
         </div>
     </script>
+    
     <!-- editor array -->
     <script>
         Vue.component("editor-array", {
-            props:["defaultSettings", "list", "dataType", "definition"],// defaultSettings are defaults for the create mode form
+            props:["defaultValues", "defaultMembers", "list", "templateName", "definition"],// defaultSettings are defaults for the create mode form
+            mounted:function()
+            {
+                var i;
+                for(i=0; i<this.defaultMembers.length; i++)
+                {
+                    this.list.push(this.defaultMembers[i]);
+                }
+            },
             template:"#TemplateEditorArray"
         });
     </script>
     <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <editor create="true"
-            :object="defaultSettings" :list="list" :data-type="dataType" :definition="definition"></editor>
-            <hr>
-            <editor v-for="(object, index) in list" :index="index"
-            :object="object"          :list="list" :data-type="dataType" :definition="definition" ></editor> <!---->
+            <editor create="true"                   :index="-1"    :object="defaultValues" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
+            <editor v-for="(object, index) in list" :index="index" :object="object"        :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
         </div>
     </script>
 
@@ -145,20 +141,6 @@
             object:{default:function(){return {};}}
         }
     }
-    </script>
-    <!-- Data Type: Root -->
-    <script>
-    Vue.component("type-root", {
-        mixins:[MixinDataType],
-        template:"#TemplateDataTypeRoot"
-    });
-    </script>
-    <script id="TemplateDataTypeRoot" type="text/x-template">
-        <editor-array
-            :default-settings="{name:'default', data:7, children:[]}"
-            :list="object.Sources"
-            data-type="type-source">
-        </editor-array>
     </script>
     <!-- Data Type: Source -->
     <script>
@@ -180,25 +162,6 @@
                     :list="object.children"
                     data-type="type-child">
                 </editor-array>
-            </div>
-        </div>
-    </script>
-    <!-- Data Type: Child -->
-    <script>
-        Vue.component("type-child", {
-            mixins:[MixinDataType],
-            template:"#TemplateDataTypeChild"
-        });
-    </script>
-    <script id="TemplateDataTypeChild" type="text/x-template">
-        <div>
-            <div v-if="read">
-                <h3>{{object.name}} | {{object.type}} | {{object.active}} </h3>
-            </div>
-            <div v-if="write">
-                <component is="leaf-string" v-model="object.name" display="Name"></component>
-                <component is="leaf-enum" v-model="object.type" display="Type" :settings="['JSON', 'XML', 'CSV']"></component>
-                <component is="leaf-boolean" v-model="object.active" display="Active"></component>
             </div>
         </div>
     </script>
@@ -237,30 +200,23 @@
                 return output;
             }
         },
+        mounted:function()
+        {
+
+        },
         template:"#TemplateDataTypeDynamic"
     })
     </script>
     <script id="TemplateDataTypeDynamic" type="text/x-template">
         <div>
             <div v-if="write">
-                <component
-                    v-for="leaf in Schema.Leaves"
-                    :is="'leaf-'+leaf.type"
-                    v-model="object[leaf.key]"
-                    :display="leaf.display"
-                    :settings="leaf.settings"></component>
+                <component v-for="leaf in Schema.Leaves" :is="'leaf-'+leaf.type" v-model="object[leaf.key]" :display="leaf.display" :settings="leaf.settings"></component>
             </div>
             <div v-if="read">
                 <div v-for="leaf in Schema.Leaves">{{object[leaf.key]}}</div>
-                <editor-array
-                    v-for="branch in Schema.Branches"
-                    data-type="type-dynamic"
-                    :default-settings="branch.default"
-                    :list="object[branch.key]"
-                    :definition="branch.settings"></editor-array>
+                <editor-array v-for="branch in Schema.Branches" template-name="type-dynamic" :default-values="" :default-members="branch.default" :list="object[branch.key]" :definition="branch.settings"></editor-array>
             </div>
         </div>
-
     </script>
 
 
@@ -331,19 +287,6 @@
             </select>
         </div>
     </script>
-    <!-- Lef: Array -->
-    <script>
-    Vue.component("leaf-array", {
-        mixins:[MixinLeaf],
-        template:"#TemplateLeafArray"
-    });
-    </script>
-    <script id="TemplateLeafArray" type="text/x-template">
-        <div>
-            <label>{{display}}</label>
-            <input :value="value" v-on:change="Dispatch" type="checkbox">
-        </div>
-    </script>
 
     <!-- application -->
     <script>
@@ -360,7 +303,7 @@
                 Schema:
                 {
                     thing:{type:"string", default:"hey"},
-                    members:{type:"array", settings:{
+                    members:{type:"array", default:"[{name:'default1', age:7}, {name:'default2', age:8}]", settings:{
                         name:{type:"string", default:"dm"},
                         age:{type:"number"}
                     }}
@@ -375,10 +318,6 @@
                         }}
                     }}
                     */
-                },
-                Model:{
-                    thing:"test",
-                    members:[{name:"seth", age:35}]
                 }
             }
         });
