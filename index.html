@@ -3,10 +3,36 @@
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
         <style>
+            *
+            {
+                font-family:Arial, Helvetica, sans-serif;
+            }
             .Editor
             {
-                padding:1em;
+                padding:8px;
+                margin-bottom:3px;
                 border:1px solid #aaa;
+            }
+            .Editor:first-child
+            {
+                background:#62c26a;
+            }
+            .Field
+            {
+                margin-top:3px;
+                border-top:1px solid #eee;
+            }
+            .Label
+            {
+                display: inline-block;
+                width: 80px;
+                vertical-align: top;
+                font-size:80%;
+                text-align:right;
+            }
+            .Value
+            {
+                display: inline-block;
             }
         </style>
     </head>
@@ -34,7 +60,7 @@
                 clone:{}
             }
         },
-        mounted:function()
+        created:function()
         {
             this.Clone();
         },
@@ -81,7 +107,7 @@
     <script id="TemplateEditor" type="text/x-template">
         <div class="Editor">
             <form v-if="create" v-on:submit.prevent="Create">
-                <component :is="templateName" :write="true" :object="clone" :definition="definition"></component>
+                <!--<component :is="templateName" :write="true" :object="clone" :definition="definition"></component>-->
                 <div class="Controls">
                     <button v-on:click.prevent="Create">    <i class="icon icon-plus-circle"></i> <span>Create</span></button>
                 </div>
@@ -126,8 +152,8 @@
     </script>
     <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <editor create="true"                   :index="-1"    :object="FormDefaults" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
-            <editor v-for="(object, index) in list" :index="index" :object="object"       :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
+            <editor create="true"                   :index="-1"    :object="FormDefaults" :list="list" :templateName="templateName" :definition="definition"></editor>
+            <editor v-for="(object, index) in list" :index="index" :object="object"       :list="list" :templateName="templateName" :definition="definition"></editor>
         </div>
     </script>
 
@@ -182,26 +208,31 @@
                 return output;
             }
         },
-        created:function()
-        {
-
-        },
         template:"#TemplateDataTypeDynamic"
     })
     </script>
     <script id="TemplateDataTypeDynamic" type="text/x-template">
         <div>
             <div v-if="write">
-                <component v-for="leaf in Schema.Leaves" :is="'leaf-'+leaf.type" v-model="object[leaf.key]" :display="leaf.display" :settings="leaf.settings"></component>
+                <div class="Field" v-for="leaf in Schema.Leaves">
+                    <div class="Label">{{leaf.display}}:</div>
+                    <div class="Value"><component :is="'leaf-'+leaf.type" v-model="object[leaf.key]" :display="leaf.display" :settings="leaf.settings"></component></div>
+                </div>
             </div>
             <div v-if="read">
-                <div v-for="leaf in Schema.Leaves">{{object[leaf.key]}}</div>
-                <editor-array v-for="branch in Schema.Branches" template-name="type-dynamic" :list="object[branch.key]" :definition="branch.settings"></editor-array>
+                <div class="Field" v-for="leaf in Schema.Leaves">
+                    <div class="Label">{{leaf.display}}:</div>
+                    <div class="Value">{{object[leaf.key]}}</div>
+                </div>
+                <div class="Field" v-for="branch in Schema.Branches">
+                    <div class="Label">{{branch.display}}: </div>
+                    <div class="Value"><editor-array template-name="type-dynamic" :list="object[branch.key]" :definition="branch.settings"></editor-array></div>
+                </div>
+
             </div>
         </div>
     </script>
     
-
     <!-- mixin Leaves -->
     <script>
     var MixinLeaf = {
@@ -224,7 +255,6 @@
     </script>
     <script id="TemplateLeafString" type="text/x-template">
         <div>
-            <label>{{display}}</label>
             <input :value="value" v-on:input="Dispatch" type="text">
         </div>
     </script>
@@ -237,7 +267,6 @@
     </script>
     <script id="TemplateLeafNumber" type="text/x-template">
         <div>
-            <label>{{display}}</label>
             <input :value="value" v-on:input="Dispatch" type="number">
         </div>
     </script>
@@ -250,7 +279,6 @@
     </script>
     <script id="TemplateLeafBoolean" type="text/x-template">
         <div>
-            <label>{{display}}</label>
             <input :value="value" v-on:change="Dispatch" type="checkbox">
         </div>
     </script>
@@ -263,7 +291,6 @@
     </script>
     <script id="TemplateLeafEnum" type="text/x-template">
         <div>
-            <label>{{display}}</label>
             <select v-on:change="Dispatch" :value="value">
                 <option v-for="option in settings" :value="option" selected="">{{option}}</option>
             </select>
@@ -277,17 +304,13 @@
             data:
             {
                 /*
-                - array *defaults* are used to seed a parent array with values when the component is created
-                - array *settings* are used to build the form that creates new types that will go in the parent array
-                - if an item has defaults, that item will be added to the model if it doesnt exist
+                - array *defaults* are used to seed a parent array with values when the component is initialized
+                - non-array *defaults* (array *settings*) are used to build the form that creates new types that will go in the parent array
+                - if an item has defaults, that property will be added to the model object if it doesnt exist
                 */
                 Schema:
                 {
-                    thing:{type:"string", default:"hey"},
-                    otherArray:{type:"array", default:[], settings:{
-                        text:{type:"string", default:"other deep string"}
-                    }},
-                    members:{type:"array", default:[{name:'default1', age:7, deep:[]}, {name:'default2', age:8, deep:[]}], settings:{
+                    members:{type:"array", default:[{name:'default1', age:7}], settings:{
                         name:{type:"string", default:"dm"},
                         age:{type:"number", default:10},
                         deep:{type:"array", default:[{count:0}, {count:1}, {count:3}], settings:{
