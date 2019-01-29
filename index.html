@@ -109,7 +109,7 @@
         Vue.component("editor-array", {
             props:["list", "templateName", "definition"],// defaultSettings are defaults for the create mode form
             computed:{
-                formDefaults:function()
+                FormDefaults:function()
                 {
                     var key, value;
                     var output = {};
@@ -126,11 +126,10 @@
     </script>
     <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <editor create="true"                   :index="-1"    :object="formDefaults" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
+            <editor create="true"                   :index="-1"    :object="FormDefaults" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
             <editor v-for="(object, index) in list" :index="index" :object="object"       :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
         </div>
     </script>
-
 
     <!-- mixin DataType-->
     <script>
@@ -141,29 +140,6 @@
             object:{default:function(){return {};}}
         }
     }
-    </script>
-    <!-- Data Type: Source -->
-    <script>
-    Vue.component("type-source", {
-        mixins:[MixinDataType],
-        template:"#TemplateDataTypeSource"
-    });
-    </script>
-    <script id="TemplateDataTypeSource" type="text/x-template">
-        <div>
-            <div v-if="read">
-                <h3>{{object.name}} | {{object.data}}</h3>
-            </div>
-            <div v-if="write">
-                <component is="leaf-string" v-model="object.name" display="Name"></component>
-                <component is="leaf-number" v-model="object.data" display="Data"></component>
-                <editor-array
-                    :default-settings="{name:'child', type:'CSV', active:false}"
-                    :list="object.children"
-                    data-type="type-child">
-                </editor-array>
-            </div>
-        </div>
     </script>
     <!-- Data Type: Dynamic -->
     <script>
@@ -196,11 +172,17 @@
                     {
                         output.Leaves.push(value);
                     }
+
+                    // put defined properties and their defaults on object if they dont exists
+                    if(typeof this.object[key] === "undefined" && typeof value.default !== "undefined")
+                    {
+                        this.object[key] = value.default;
+                    }
                 }
                 return output;
             }
         },
-        mounted:function()
+        created:function()
         {
 
         },
@@ -218,7 +200,7 @@
             </div>
         </div>
     </script>
-
+    
 
     <!-- mixin Leaves -->
     <script>
@@ -290,19 +272,21 @@
 
     <!-- application -->
     <script>
-        /*
-        api endpoints:
-        - Type
-        - Load
-        - Save
-        */
         var App = new Vue({
             el:"#App",
             data:
             {
+                /*
+                - array *defaults* are used to seed a parent array with values when the component is created
+                - array *settings* are used to build the form that creates new types that will go in the parent array
+                - if an item has defaults, that item will be added to the model if it doesnt exist
+                */
                 Schema:
                 {
                     thing:{type:"string", default:"hey"},
+                    otherArray:{type:"array", default:[], settings:{
+                        text:{type:"string", default:"other deep string"}
+                    }},
                     members:{type:"array", default:[{name:'default1', age:7, deep:[]}, {name:'default2', age:8, deep:[]}], settings:{
                         name:{type:"string", default:"dm"},
                         age:{type:"number", default:10},
@@ -310,21 +294,17 @@
                             count:{type:"number", default:-10}
                         }}
                     }}
-                    /*
-                    Sources:{type:"array", default:[], settings:{
-                        name:{type:"string", default:"new source"},
-                        data:{type:"number", default:1},
-                        children:{type:"array", default:[], settings:{
-                            name:{type:"string", default:"new child"},
-                            type:{type:"enum", default:"JSON", settings:["JSON", "CSV", "XML"]},
-                            active:{type:"boolean", default:"false"}
-                        }}
-                    }}
-                    */
                 },
-                Model:{
-                    thing:"test leaf value",
-                    members:[]
+                Model:{}
+            },
+            methods:{
+                Switcheroo:function()
+                {
+                    this.Model = {
+                        thing:"its a thing!",
+                        otherArray:[{text:"ahhaa!!"}],
+                        members:[]
+                    }
                 }
             }
         });
