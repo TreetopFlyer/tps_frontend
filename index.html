@@ -38,10 +38,6 @@
         {
             console.log("editor mounted");
             this.Clone();
-            if(this.list.length == 0)
-            {
-                this.Create();
-            }
         },
         methods:{
             Clone:function()
@@ -115,10 +111,24 @@
             props:["defaultValues", "defaultMembers", "list", "templateName", "definition"],// defaultSettings are defaults for the create mode form
             mounted:function()
             {
+                console.log("array editor mounted: adding seed items")
                 var i;
                 for(i=0; i<this.defaultMembers.length; i++)
                 {
                     this.list.push(this.defaultMembers[i]);
+                }
+            },
+            computed:{
+                formDefaults:function()
+                {
+                    var key, value;
+                    var output = {};
+                    for(key in this.definition)
+                    {
+                        value = this.definition[key];
+                        output[key] = value.default;
+                    }
+                    return output;
                 }
             },
             template:"#TemplateEditorArray"
@@ -126,8 +136,9 @@
     </script>
     <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <editor create="true"                   :index="-1"    :object="defaultValues" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
-            <editor v-for="(object, index) in list" :index="index" :object="object"        :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
+            <label>{{display}}</label>
+            <editor create="true"                   :index="-1"    :object="formDefaults" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
+            <editor v-for="(object, index) in list" :index="index" :object="object"       :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
         </div>
     </script>
 
@@ -214,7 +225,7 @@
             </div>
             <div v-if="read">
                 <div v-for="leaf in Schema.Leaves">{{object[leaf.key]}}</div>
-                <editor-array v-for="branch in Schema.Branches" template-name="type-dynamic" :default-values="" :default-members="branch.default" :list="object[branch.key]" :definition="branch.settings"></editor-array>
+                <editor-array v-for="branch in Schema.Branches" template-name="type-dynamic" :list="object[branch.key]" :definition="branch.settings"></editor-array>
             </div>
         </div>
     </script>
@@ -303,9 +314,12 @@
                 Schema:
                 {
                     thing:{type:"string", default:"hey"},
-                    members:{type:"array", default:"[{name:'default1', age:7}, {name:'default2', age:8}]", settings:{
+                    members:{type:"array", default:[{name:'default1', age:7, deep:[]}, {name:'default2', age:8, deep:[]}], settings:{
                         name:{type:"string", default:"dm"},
-                        age:{type:"number"}
+                        age:{type:"number", default:10},
+                        deep:{type:"array", default:[{count:0}, {count:1}, {count:3}], settings:{
+                            count:{type:"number", default:-10}
+                        }}
                     }}
                     /*
                     Sources:{type:"array", default:[], settings:{
@@ -318,6 +332,10 @@
                         }}
                     }}
                     */
+                },
+                Model:{
+                    thing:"test leaf value",
+                    members:[]
                 }
             }
         });
