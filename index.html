@@ -2,6 +2,7 @@
 <html>
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
+        <link rel="stylesheet" href="icomoon/font.css"></link>
         <style>
             *
             {
@@ -28,11 +29,22 @@
                 width: 80px;
                 vertical-align: top;
                 font-size:80%;
-                text-align:right;
             }
             .Value
             {
                 display: inline-block;
+                padding:3px;
+            }
+            button
+            {
+                border:none;
+                background:#eee;
+                color:#333;
+                border-radius:4px;
+            }
+            button span
+            {
+                display:none;
             }
         </style>
     </head>
@@ -238,7 +250,7 @@
     var MixinLeaf = {
         props:{
             display:{default:"Field"},
-            value:{default:"-empty-"},
+            value:{default:"--empty--"},
             settings:[Object, Array]
         },
         methods:{
@@ -279,7 +291,7 @@
     </script>
     <script id="TemplateLeafBoolean" type="text/x-template">
         <div>
-            <input :value="value" v-on:change="Dispatch" type="checkbox">
+            <input :checked="value" v-on:change="$emit('input', $event.target.checked)" type="checkbox">
         </div>
     </script>
     <!-- Leaf: Enum -->
@@ -313,8 +325,10 @@
                     members:{type:"array", default:[{name:'default1', age:7}], settings:{
                         name:{type:"string", default:"dm"},
                         age:{type:"number", default:10},
+                        active:{type:"boolean", default:true},
                         deep:{type:"array", default:[{count:0}, {count:1}, {count:3}], settings:{
-                            count:{type:"number", default:-10}
+                            count:{type:"number", default:-10},
+                            options:{type:"enum", default:"XML", settings:["JSON", "CSV", "XML"]}
                         }}
                     }}
                 },
@@ -324,9 +338,9 @@
                 Switcheroo:function()
                 {
                     this.Model = {
-                        thing:"its a thing!",
-                        otherArray:[{text:"ahhaa!!"}],
-                        members:[]
+                        members:[
+                            {name:"seth", age:35, deep:[]}
+                        ]
                     }
                 }
             }
