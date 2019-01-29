@@ -36,7 +36,6 @@
         },
         mounted:function()
         {
-            console.log("editor mounted");
             this.Clone();
         },
         methods:{
@@ -108,16 +107,7 @@
     <!-- editor array -->
     <script>
         Vue.component("editor-array", {
-            props:["defaultValues", "defaultMembers", "list", "templateName", "definition"],// defaultSettings are defaults for the create mode form
-            mounted:function()
-            {
-                console.log("array editor mounted: adding seed items")
-                var i;
-                for(i=0; i<this.defaultMembers.length; i++)
-                {
-                    this.list.push(this.defaultMembers[i]);
-                }
-            },
+            props:["list", "templateName", "definition"],// defaultSettings are defaults for the create mode form
             computed:{
                 formDefaults:function()
                 {
@@ -136,7 +126,6 @@
     </script>
     <script id="TemplateEditorArray" type="text/x-template">
         <div>
-            <label>{{display}}</label>
             <editor create="true"                   :index="-1"    :object="formDefaults" :list="list" :templateName="templateName" :definition="definition"></editor><hr>
             <editor v-for="(object, index) in list" :index="index" :object="object"       :list="list" :templateName="templateName" :definition="definition"></editor> <!---->
         </div>
