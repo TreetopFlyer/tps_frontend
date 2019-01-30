@@ -53,6 +53,20 @@
     </head>
     <body>
         <div id="App">
+            <div>
+                <button v-on:click="HistoryPush('basic')">save</button>
+            </div>
+            <div class="Band History">
+                <div class="Center">
+                    <div class="Pad">
+                        <i class="icon icon-clock"></i> Show State:
+                        <button v-bind:class="{Disabled: !HistoryCanGoBack()}" v-on:click="HistoryBack()"><i class="icon icon-arrow-left"></i>Back</button>
+                        <button v-bind:class="{Disabled: !HistoryCanGoForward()}" v-on:click="HistoryForward()"><i class="icon icon-arrow-right"></i>Forward</button>
+                        |
+                        <button v-bind:class="{Highlighted: HistoryCurrent() == itemValue}" v-on:click="HistoryRecall(itemKey)" v-for="(itemValue, itemKey) in History.Stack">{{ itemValue.Type }}</button> 
+                    </div>
+                </div>
+            </div>
             <type-dynamic :read="true" :object="Model" :definition="Schema"></type-dynamic>
         </div>
     </body>
@@ -339,10 +353,20 @@
             el:"#App",
             data:
             {
+                API:{
+                    Domain:'http://localhost:80',
+                    RequestLog:[],
+                    Sources:[]
+                },
+                History:{
+                    Stack:[{Type:"Initialized", Data:"{}"}],
+                    Index:0
+                },
+
                 /*
-                - array *defaults* are used to seed a parent array with values when the component is initialized
-                - non-array *defaults* (array *settings*) are used to build the form that creates new types that will go in the parent array
-                - if an item has defaults, that property will be added to the model object if it doesnt exist
+                - array *defaults* are used to seed the array with values when its component is initialized
+                - non-array *defaults* are used to build the form that creates new types that will go in the parent array
+                - if an item has defaults, that property will be created on the model object if it doesnt exist
                 */
                 Schema:
                 {
@@ -366,8 +390,127 @@
                             {name:"seth", age:35, deep:[]}
                         ]
                     }
+                },
+                QueueRemove: function(inObj)
+                {
+                    var i;
+                    for(i=0; i<this.API.RequestLog.length; i++)
+                    {
+                        if(this.API.RequestLog[i].ID == inObj.ID)
+                        {
+                            this.API.RequestLog.splice(i, 1);
+                        }
+                    }
+                },
+                QueueAdd: function(inObj)
+                {
+                    this.API.RequestLog.push(inObj);
+                },
+                CORS: function(inMessage, inURL, inVerb, inSuccessHandler, inBody)
+                {
+                    var context;
+                    var log;
+                    var xhr;
+                    context = this;
+                    log = {
+                        ID:Math.random(),
+                        Message:inMessage
+                    };
+                    this.QueueAdd(log);
+                    xhr = new XMLHttpRequest();
+                    if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
+                    xhr.open(inVerb, inURL);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.onload = function(request)
+                    { 
+                        var response;
+                        context.QueueRemove(log);
+                        response = request.currentTarget.response || request.target.responseText;
+                        console.log(response);
+                        inSuccessHandler.call(context, response);
+                    };
+                    xhr.onerror = function()
+                    {
+                        console.log("xhr error");
+                        context.QueueRemove(log);
+                    };
+                    xhr.send(inBody);
+                    return xhr;
+                },
+                SourceDownload: function()
+                {
+                    this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
+                    {
+                        this.API.Sources = JSON.parse(inResponse).source_list;
+                        this.HistoryPush("Download");
+                    });
+                },
+                SourceUpload: function()
+                {
+                    this.HistoryPush("Upload");
+                    this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
+                    {
+                        alert(inResponse);
+                    },
+                    JSON.stringify(this.API.Sources));
+                },
+                HistoryPush: function(inType)
+                {
+                    /*
+                    // if there's no change in the type of action, do noting (effectively combining edits)
+                    if(this.HistoryCurrent().Type == inType)
+                    {
+                        return;
+                    }
+                    */
+                    
+                    // if we have gone back and are now adding a new item, delete everything ahead of this first
+                    if(this.History.Index != this.History.Stack.length-1)
+                    {
+                        this.History.Stack.splice(this.History.Index+1);
+                    }
+                    this.History.Stack.push({Type:inType, Data:JSON.stringify(this.Model, null, 2)});
+                    // limit to 20 items
+                    if(this.History.Stack.length > 20)
+                    {
+                        this.History.Stack.shift();
+                    }
+                    this.History.Index = this.History.Stack.length-1;
+                },
+                HistoryCurrent: function()
+                {
+                    return this.History.Stack[this.History.Index];
+                },
+                HistoryRecall: function(inIndex)
+                {
+                    this.History.Index = inIndex;
+                    this.Model = JSON.parse(this.History.Stack[inIndex].Data);
+                },
+                HistoryForward: function()
+                {
+                    if(this.HistoryCanGoForward())
+                    {
+                        this.HistoryRecall(this.History.Index+1);
+                    }
+                },
+                HistoryBack: function()
+                {
+                    if(this.HistoryCanGoBack())
+                    {
+                        this.HistoryRecall(this.History.Index-1);
+                    }
+                },
+                HistoryCanGoBack: function()
+                {
+                    return this.History.Index > 0;
+                },
+                HistoryCanGoForward: function()
+                {
+                    return this.History.Index < this.History.Stack.length-1;
                 }
             }
+
         });
     </script>
 </html>
