@@ -10,13 +10,11 @@
             }
             .Editor
             {
-                padding:8px;
-                margin-bottom:3px;
-                border:1px solid #aaa;
-            }
-            .Editor:first-child
-            {
-                background:#62c26a;
+                border-radius: 3px;
+                box-shadow: 0px 2px 3px #d4d4d4;
+                padding: 8px;
+                margin-bottom: 3px;
+                border: 1px solid #aaa;
             }
             .Field
             {
@@ -45,6 +43,11 @@
             button span
             {
                 display:none;
+            }
+            button:hover
+            {
+                background:#666;
+                color:#eee;
             }
         </style>
     </head>
@@ -176,6 +179,16 @@
             read:{default:false},
             write:{default:false},
             object:{default:function(){return {};}}
+        },
+        data:function()
+        {
+            return {open:false}
+        },
+        methods:{
+            Toggle:function()
+            {
+                this.open = !this.open;
+            }
         }
     }
     </script>
@@ -236,11 +249,22 @@
                     <div class="Label">{{leaf.display}}:</div>
                     <div class="Value">{{object[leaf.key]}}</div>
                 </div>
+            </div>
+            <div v-if="open && Schema.Branches.length > 0">
+                <button v-on:click="Toggle">
+                    <i class="icon icon-chevron-up"></i>
+                    <a>Hide Chidren</a>
+                </button>
                 <div class="Field" v-for="branch in Schema.Branches">
                     <div class="Label">{{branch.display}}: </div>
                     <div class="Value"><editor-array template-name="type-dynamic" :list="object[branch.key]" :definition="branch.settings"></editor-array></div>
                 </div>
-
+            </div>
+            <div v-if="!open && Schema.Branches.length > 0">
+                <button v-on:click="Toggle">
+                    <i class="icon icon-chevron-down"></i>
+                    <a>Show Chidren</a>
+                </button>
             </div>
         </div>
     </script>
