@@ -71,9 +71,10 @@ export var AppModel = {
 export var AppSchema =
 {
     prop1:{type:"string", display:"Propery One", default:"default string"},
+    prop2:{type:"string", display:"Propery Two", default:"default string"},
     deep:{type:"array", display:"Array One", default:[{childProp:"d1"}, {childProp:"d2"}], settings:[
         {
-            childProp:{type:"string", display:"Child Property"}
+            childProp:{type:"string", display:"Child Property", default:"child property string"}
         }
     ]}
 };
@@ -108,8 +109,8 @@ const _Editor = (inEditor) =>
             </div>
             `;
         })}
-            <button @click=${() => { console.log("cancel click"); inEditor.EditCancel();}}>Cancel</button>
-            <button @click=${() => { console.log("save click"); inEditor.EditSave();}}>OK</button>
+            <button @click=${() => { inEditor.EditSave();}}>OK</button>
+            <button @click=${() => { inEditor.EditCancel();}}>Cancel</button>
         </form>`;
     }
     else
@@ -124,37 +125,41 @@ const _Editor = (inEditor) =>
             </div>
             `;
         })}
-            <button @click=${() => { console.log("edit click"); inEditor.EditStart();}}>Edit</button>
+            <button @click=${() => { inEditor.EditStart();}}>Edit</button>
         </div>`;
     }
 };
 const _Node = (inModel, inSchema) =>
 {
-    var key, value, modelValue;
-    var leaves, branches, choice;
+    var key, value;
+    var leaves, branches;
+    var mapper;
     leaves = [];
     branches = [];
     for(key in inSchema)
     {
         value = inSchema[key];
-        if(value.type === "array")
-        {
-            choice = branches;
-        }
-        else
-        {
-            choice = leaves;
-        }
-        choice.push({
+
+        mapper = {
             Key:key,
             Value:inModel[key],
-            Copy:"",// this is only used on leaves
             Object:inModel,
             Type:value.type,
             Display:value.display||key,
             Default:value.default,
             Settings:value.settings
-        });
+        };
+
+        if(value.type === "array")
+        {
+            branches.push(mapper);
+        }
+        else
+        {
+            mapper.Copy = "";
+            leaves.push(mapper);
+        }
+        
     }
 
     return html`
