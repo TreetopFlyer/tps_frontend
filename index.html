@@ -24,9 +24,9 @@
             .Label
             {
                 display: inline-block;
-                width: 80px;
+                width: 100px;
                 vertical-align: top;
-                font-size:80%;
+                font-size:70%;
             }
             .Value
             {
@@ -49,25 +49,44 @@
                 background:#666;
                 color:#eee;
             }
+            .Column
+            {
+                display:block;
+                float:left;
+            }
+            textarea
+            {
+                display:block;
+                width:80%;
+            }
         </style>
     </head>
     <body>
         <div id="App">
-            <div>
-                <button v-on:click="HistoryPush('basic')">save</button>
+            <div class="Column Schema" style="width:20%;">
+                <h3>1. Define Schema</h3>
+                <input v-model="API.Schema" >
+                <br>
+                <button v-on:click=""><i class="icon icon-arrow-down"></i>Download</button>
+                <hr>
+                <textarea v-model="FormattedSchema" style="display: block; min-height: 400px;"></textarea>
             </div>
-            <div class="Band History">
-                <div class="Center">
-                    <div class="Pad">
-                        <i class="icon icon-clock"></i> Show State:
-                        <button v-bind:class="{Disabled: !HistoryCanGoBack()}" v-on:click="HistoryBack()"><i class="icon icon-arrow-left"></i>Back</button>
-                        <button v-bind:class="{Disabled: !HistoryCanGoForward()}" v-on:click="HistoryForward()"><i class="icon icon-arrow-right"></i>Forward</button>
-                        |
-                        <button v-bind:class="{Highlighted: HistoryCurrent() == itemValue}" v-on:click="HistoryRecall(itemKey)" v-for="(itemValue, itemKey) in History.Stack">{{ itemValue.Type }}</button> 
-                    </div>
-                </div>
+            <div class="Column Edit" style="width:40%;">
+                <h3>2. Edit Model</h3>
+                <input v-model="API.Download" >
+                <br>
+                <button v-on:click="APIDownload"><i class="icon icon-arrow-down"></i>Download</button>
+                <hr>
+                <type-dynamic :read="true" :object="Model" :definition="Schema"></type-dynamic>
             </div>
-            <type-dynamic :read="true" :object="Model" :definition="Schema"></type-dynamic>
+            <div class="Column Save" style="width:40%;">
+                <h3>3. Save</h3>
+                <input v-model="API.Upload" >
+                <br>
+                <button v-on:click=""><i class="icon icon-arrow-up"></i>Upload</button>
+                <hr>
+                <textarea v-model="FormattedModel" style="display: block; min-height: 400px;"></textarea>
+            </div>
         </div>
     </body>
 
@@ -100,7 +119,7 @@
             },
             Create:function()
             {
-                this.list.push(JSON.parse(JSON.stringify(this.clone)));
+                this.list.unshift(JSON.parse(JSON.stringify(this.clone)));
             },
             Duplicate:function()
             {
@@ -354,7 +373,10 @@
             data:
             {
                 API:{
-                    Domain:'http://localhost:80',
+                    Download:"http://localhost:80/source",
+                    Upload:"http://localhost:80/",
+                    Schema:"http://localhost:80/",
+
                     RequestLog:[],
                     Sources:[]
                 },
@@ -370,17 +392,34 @@
                 */
                 Schema:
                 {
-                    members:{type:"array", default:[{name:'default1', age:7}], settings:{
-                        name:{type:"string", default:"dm"},
-                        age:{type:"number", default:10},
-                        active:{type:"boolean", default:true},
-                        deep:{type:"array", default:[{count:0}, {count:1}, {count:3}], settings:{
-                            count:{type:"number", default:-10},
-                            options:{type:"enum", default:"XML", settings:["JSON", "CSV", "XML"]}
+                    source_list:{type:"array", default:[], settings:{
+                        name:{type:"string", default:"new source"},
+                        source:{type:"enum", default:"client_file", settings:["client_file", "api"]},
+                        loading_function:{type:"enum", default:"csv", display:"loading function", settings:["xml", "csv", "json"]},
+                        constraint:{type:"array", default:[], settings:{
+                            accessor:{type:"string", default:"{column}"}
+                        }},
+                        schemas:{type:"array", default:[], settings:{
+                            name:{type:"string", default:"new schema"},
+                            columns:{type:"array", default:[], settings:{
+                                column_name:{type:"string", default:"new column"},
+                                path:{type:"string", default:"{path}"},
+                                type:{type:"enum", default:"text", settings:["text", "date", "numeric"]}
+                            }}
                         }}
                     }}
                 },
                 Model:{}
+            },
+            computed:{
+                FormattedSchema:function()
+                {
+                    return JSON.stringify(this.Schema, null, 2);
+                },
+                FormattedModel:function()
+                {
+                    return JSON.stringify(this.Model, null, 2);
+                }
             },
             methods:{
                 Switcheroo:function()
@@ -438,18 +477,18 @@
                     xhr.send(inBody);
                     return xhr;
                 },
-                SourceDownload: function()
+                APIDownload: function()
                 {
-                    this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
+                    this.CORS("Downloading Data", this.API.Download, "GET", function(inResponse)
                     {
-                        this.API.Sources = JSON.parse(inResponse).source_list;
+                        this.Model = JSON.parse(inResponse);
                         this.HistoryPush("Download");
                     });
                 },
-                SourceUpload: function()
+                APIUpload: function()
                 {
-                    this.HistoryPush("Upload");
-                    this.CORS("Saving Sources", this.API.Domain+'/source', "POST", function(inResponse)
+                    this.HistoryPush("Uploading Data");
+                    this.CORS("Saving Sources", this.API.Upload, "POST", function(inResponse)
                     {
                         alert(inResponse);
                     },
