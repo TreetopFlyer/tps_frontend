@@ -1,104 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
-
+        <style>
+            .Node
+            {
+                padding:1rem;
+                border-left:1px solid #666;
+            }
+        </style>
     </head>
     <body>
         <div id="App"></div>
-
         <script type="module">
-
-            import {html, render} from 'https://unpkg.com/lit-html?module';
-
-            const CRUD = {
-                Create:(inList, inIndex, inObject) =>
-                {
-                    console.log("CRUDCreate", inList, inObject);
-                    inList.unshift(JSON.parse(JSON.stringify(inObject)) );
-                    AppUpdate();
-                },
-                Update:(inList, inIndex, inObject) =>
-                {
-                    inList[inIndex] = inObject;
-                    AppUpdate();
-                },
-                Delete:(inList, inIndex) =>
-                {
-                    inList.splice(inIndex, 1);
-                    AppUpdate();
-                },
-                Duplicate:(inList, inIndex) =>
-                {
-                    inList.splice( inIndex, 1, JSON.parse(JSON.stringify(inList[inIndex])) );
-                    AppUpdate();
-                }
-            };
-
-            var AppModel = {
-                prop1:true,
-                prop2:"ok",
-                deep:[]
-            };
-            const AppUpdate = () =>
-            {
-                AppView(AppModel, document.querySelector("#App"));
-            };
-            const AppView = (inModel, inRoot) =>
-            {
-                render(_Node(inModel), inRoot);
-            };
-            const _Node = (inNode) =>
-            {
-                var key, value;
-                var leaves, branches, choice;
-                leaves = [];
-                branches = [];
-                for(key in inNode)
-                {
-                    value = inNode[key];
-                    if(typeof value === "object")
-                    {
-                        choice = branches;
-                    }
-                    else
-                    {
-                        choice = leaves
-                    }
-                    choice.push({Key:key, Value:value});
-                }
-
-                return html`
-                <div class="Node">
-                    <div class="Leaves">
-                    ${leaves.map((inItem, inIndex, inArray)=>{
-                        return html`<div class="Field">${inItem.Key}: ${inItem.Value}</div>`;
-                    })}
-                    </div>
-                    <div class="Branches">
-                    ${branches.map((inItem, inIndex, inArray)=>{
-                        return html`<div class="Field">${inItem.Key}: ${_List(inItem.Value, {testit:true, crazyDeep:[]})}</div>`;
-                    })}
-                    </div>
-                </div>`;
-            };
-            const _List = (inArray, inDefaultsNew, inDefaultsExisting) =>
-            {
-                return html`
-                <div class="List">
-                    <button @click=${() => {CRUD.Create(inArray, 0, inDefaultsNew)}}>Add</button>
-                    <ul>
-                    ${inArray.map((inItem, inIndex, inArray)=>
-                    {
-                        return html`<li>${_Node(inItem)}</li>`;
-                    })}
-                    </ul>
-                </div>`;
-            };
-
-            AppUpdate();
-
+            import './editor.js';
         </script>
-
     </body>
 
 </html>
