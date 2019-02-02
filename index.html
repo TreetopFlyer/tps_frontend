@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="https://unpkg.com/lighterhtml"></script>
-        <script>
-            const {render, html} = lighterhtml;
+
+    </head>
+    <body>
+        <div id="App"></div>
+
+        <script type="module">
+
+            import {html, render} from 'https://unpkg.com/lit-html?module';
+
             const CRUD = {
                 Create:(inList, inIndex, inObject) =>
                 {
@@ -39,9 +45,7 @@
             };
             const AppView = (inModel, inRoot) =>
             {
-                render(inRoot, ()=>{
-                    return _Node(inModel);
-                });
+                render(_Node(inModel), inRoot);
             };
             const _Node = (inNode) =>
             {
@@ -81,7 +85,7 @@
             {
                 return html`
                 <div class="List">
-                    <button onclick=${() => {CRUD.Create(inArray, 0, inDefaultsNew)}}>Add</button>
+                    <button @click=${() => {CRUD.Create(inArray, 0, inDefaultsNew)}}>Add</button>
                     <ul>
                     ${inArray.map((inItem, inIndex, inArray)=>
                     {
@@ -91,13 +95,10 @@
                 </div>`;
             };
 
-        </script>
-    </head>
-    <body>
-        <div id="App"></div>
-        <script>
             AppUpdate();
+
         </script>
+
     </body>
 
 </html>
