@@ -72,11 +72,10 @@ export var AppSchema =
 {
     prop1:{type:"string", display:"Propery One", default:"default string"},
     prop2:{type:"string", display:"Propery Two", default:"default string"},
-    deep:{type:"array", display:"Array One", default:[{childProp:"d1"}, {childProp:"d2"}], settings:[
-        {
-            childProp:{type:"string", display:"Child Property", default:"child property string"}
-        }
-    ]}
+    deep:{type:"array", display:"Array One", default:[{childProp:"d1"}, {childProp:"d2"}], settings:{
+        childProp1:{type:"string", display:"Child Property1", default:"child property string"},
+        childProp2:{type:"string", display:"Child Property2", default:"child property string"}
+    }}
 };
 export const AppUpdate = () =>
 {
@@ -131,6 +130,7 @@ const _Editor = (inEditor) =>
 };
 const _Node = (inModel, inSchema) =>
 {
+    console.log("node got", inModel, inSchema);
     var key, value;
     var leaves, branches;
     var mapper;
@@ -166,21 +166,24 @@ const _Node = (inModel, inSchema) =>
     <div class="Node">
         <button @click=${() => Editor.EditSelect(leaves)}>Show fields</button>
         <hr>
-        ${branches.map((inItem, inIndex, inArray)=>{
-            return html`
-            <div class="Field Branch">${inItem.Display}: ${_List(inItem.Value, {testit:true, _id:Math.random(), crazyDeep:[]})}</div>`;
-        })}
+        ${branches.map( inMapper => _List(inMapper) )}
     </div>`;
 };
-const _List = (inArray, inDefaultsNew, inDefaultsExisting) =>
+const _List = (inMapper) =>
 {
+    var key, value;
+    var computedDefault = {};
+    for(key in inMapper.Settings)
+    {
+        value = inMapper.Settings[key].default;
+        computedDefault[key] = value;
+    }
+
+    console.log("list got", computedDefault);
     return html`
     <div class="List">
-        <button @click=${() => {CRUD.Create(inArray, 0, inDefaultsNew)}}>Add</button>
-        ${inArray.map((inItem, inIndex, inArray)=>
-        {
-            return _Node(inItem)
-        })}
+        <button @click=${() => {CRUD.Create(inMapper.Value, 0, computedDefault)}}>Add</button>
+        ${inMapper.Value.map( inItem => _Node(inItem, inMapper.Settings) )}
     </div>`;
 };
 
