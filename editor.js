@@ -72,6 +72,7 @@ export var AppSchema =
 {
     prop1:{type:"string", display:"Propery One", default:"default string"},
     prop2:{type:"string", display:"Propery Two", default:"default string"},
+    prop3:{type:"string", display:"Propery Three"},
     deep:{type:"array", display:"Array One", default:[{childProp:"d1"}, {childProp:"d2"}], settings:{
         childProp1:{type:"string", display:"Child Property1", default:"child property string"},
         childProp2:{type:"string", display:"Child Property2", default:"child property string"}
@@ -142,7 +143,7 @@ const _Node = (inModel, inSchema) =>
 
         mapper = {
             Key:key,
-            Value:inModel[key],
+            Value:inModel[key]||value.default||"NA",
             Object:inModel,
             Type:value.type,
             Display:value.display||key,
