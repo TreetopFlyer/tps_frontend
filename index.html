@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="https://vuejs.org/js/vue.js"></script>
+        <style>
+            .Node
+            {
+                border:1px dotted #ddd;
+                padding:8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="App">
+        </div>
+
+        <!-- model/schema -->
         <script>
             var Model = {
                 sources:[
                     {
                         name:"Source1",
-                        type:"xml",
-                        layouts:[
-                            {
-                                name:"Layout1"
-                            }
-                        ]
+                        type:"xml"
                     }
                 ]
             };
@@ -24,7 +31,7 @@
                 Source:{
                     name:{type:"string", default:"new source", display:"Source"},
                     type:{type:"enum", default:"xml", display:"Type", settings:["xml", "json", "csv"]},
-                    layouts:{type:"array", settings:"Layout"}
+                    layouts:{type:"array", default:[{name:"Default Layout!"}], settings:"Layout"}
                 },
                 Layout:{
                     name:{type:"string", default:"new layout", display:"Layout"},
@@ -78,7 +85,7 @@
             }
             function Split(inMerge)
             {
-                var i;
+                var i, j;
                 var item;
                 var obj;
                 var array;
@@ -102,11 +109,38 @@
             }
             var merge = Merge(Model, Schema, "Root");
             var split = Split(merge);
-            console.log(merge, split);
         </script>
-    </head>
-    <body>
-        <div id="App">
-        </div>
+        
+        <!-- lit-html -->
+        <script type="module">
+            import {html, render} from 'https://unpkg.com/lit-html?module';
+            let _Node = (inMerged) =>
+            {
+                return html`
+                <div class="Node">
+                    ${inMerged.Leaves.map( (inItem)=>
+                    {
+                        return html`
+                        <div class="Leaf">
+                            ${inItem.Key}: ${inItem.Value}
+                        </div>
+                        `;
+                    }) }
+                    ${inMerged.Branches.map( (inItem)=>
+                    {
+                        return html`
+                        <div class="Branch">
+                            ${inItem.Key}: ${inItem.Value.map( (inMember)=>
+                            {
+                                return _Node(inMember);
+                            } )}
+                        </div>
+                        `;
+                    })}
+                </div>
+                `;
+            }
+            render(_Node(merge), document.querySelector("#App"));
+        </script>
     </body>
 </html>
