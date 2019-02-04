@@ -52,7 +52,37 @@
                 pattern = inSchema[inPattern];
                 output = {
                     Leaves:[],
-                    Branches:[]
+                    Branches:[],
+                    State:{
+                        Edit:false,
+                        Collapsed:false,
+                    },
+                    Methods:{
+                        EditStart:()=>
+                        {
+                            output.State.Edit = true;
+                        },
+                        EditCancel:()=>
+                        {
+                            output.State.Edit = false;
+                        },
+                        EditSave:()=>
+                        {
+                            output.State.Edit = false;
+                        },
+                        BranchAdd:()=>
+                        {
+
+                        },
+                        BranchDuplicate:()=>
+                        {
+
+                        },
+                        BranchDelete:()=>
+                        {
+
+                        }
+                    }
                 };
                 for(patternKey in pattern)
                 {
@@ -118,6 +148,7 @@
             {
                 return html`
                 <div class="Node">
+                    <h2>${inMerged.State.Edit}</h2>
                     ${inMerged.Leaves.map( (inItem)=>
                     {
                         return html`
@@ -126,6 +157,8 @@
                         </div>
                         `;
                     }) }
+                    <button @click=${() => inMerged.Methods.EditStart()}>Edit</button>
+                    <button @click=${() => inMerged.Methods.EditCancel()}>Cancel</button>
                     ${inMerged.Branches.map( (inItem)=>
                     {
                         return html`
@@ -140,7 +173,11 @@
                 </div>
                 `;
             }
-            render(_Node(merge), document.querySelector("#App"));
+            let Redraw = () =>
+            {
+                render(_Node(merge), document.querySelector("#App"));
+            }
+            setInterval(Redraw, 500);
         </script>
     </body>
 </html>
