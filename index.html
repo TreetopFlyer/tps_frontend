@@ -4,24 +4,13 @@
         <script src="https://vuejs.org/js/vue.js"></script>
         <script>
             var Model = {
-                client:"seth",
                 sources:[
                     {
                         name:"Source1",
                         type:"xml",
                         layouts:[
                             {
-                                name:"Layout1",
-                                columns:[
-                                    {
-                                        name:"Col1",
-                                        type:"text"
-                                    },
-                                    {
-                                        name:"Col2",
-                                        type:"date"
-                                    }
-                                ]
+                                name:"Layout1"
                             }
                         ]
                     }
@@ -29,7 +18,7 @@
             };
             var Schema = {
                 Root:{
-                    client:{type:"string"},
+                    client:{type:"string", default:"default client"},
                     sources:{type:"array", settings:"Source"}
                 },
                 Source:{
@@ -39,7 +28,7 @@
                 },
                 Layout:{
                     name:{type:"string", default:"new layout", display:"Layout"},
-                    columns:{type:"array", settings:"Column"}
+                    columns:{type:"array", default:[{name:"Product", type:"string"}, {name:"Date", type:"date"}], settings:"Column"}
                 },
                 Column:{
                     name:{type:"string", default:"new column", display:"Column"},
@@ -61,7 +50,7 @@
                 for(patternKey in pattern)
                 {
                     patternValue = pattern[patternKey];
-                    modelValue = inModel[patternKey];
+                    modelValue = inModel[patternKey]||patternValue.default||"-NA-";
             
                     property = {
                         Key:patternKey,
