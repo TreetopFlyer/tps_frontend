@@ -2,187 +2,122 @@
 <html>
     <head>
         <script src="https://vuejs.org/js/vue.js"></script>
+        <script>
+            var Model = {
+                client:"seth",
+                sources:[
+                    {
+                        name:"Source1",
+                        type:"xml",
+                        layouts:[
+                            {
+                                name:"Layout1",
+                                columns:[
+                                    {
+                                        name:"Col1",
+                                        type:"text"
+                                    },
+                                    {
+                                        name:"Col2",
+                                        type:"date"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+            var Schema = {
+                Root:{
+                    client:{type:"string"},
+                    sources:{type:"array", settings:"Source"}
+                },
+                Source:{
+                    name:{type:"string", default:"new source", display:"Source"},
+                    type:{type:"enum", default:"xml", display:"Type", settings:["xml", "json", "csv"]},
+                    layouts:{type:"array", settings:"Layout"}
+                },
+                Layout:{
+                    name:{type:"string", default:"new layout", display:"Layout"},
+                    columns:{type:"array", settings:"Column"}
+                },
+                Column:{
+                    name:{type:"string", default:"new column", display:"Column"},
+                    type:{type:"enum", default:"text", display:"Type", settings:["text", "date", "number", "boolean"]}
+                }
+            };
+            function Merge(inModel, inSchema, inPattern)
+            {
+                var i;
+                var output, property;
+                var pattern;
+                var patternKey, patternValue, modelValue;
+            
+                pattern = inSchema[inPattern];
+                output = {
+                    Leaves:[],
+                    Branches:[]
+                };
+                for(patternKey in pattern)
+                {
+                    patternValue = pattern[patternKey];
+                    modelValue = inModel[patternKey];
+            
+                    property = {
+                        Key:patternKey,
+                        Value:modelValue,
+                        Annotation:patternValue
+                    };
+            
+                    if(patternValue.type === "array")
+                    {
+                        var replacement = [];
+                        //replace the array of objects inValue with an array of merged objects
+                        for(i=0; i<modelValue.length; i++)
+                        {
+                            replacement.push( Merge(modelValue[i], inSchema, patternValue.settings) );
+                        }
+                        property.Value = replacement;
+                        output.Branches.push(property);
+                    }
+                    else
+                    {
+                        output.Leaves.push(property);
+                    }
+                }
+                return output;
+            }
+            function Split(inMerge)
+            {
+                var i;
+                var item;
+                var obj;
+                var array;
+                obj = {};
+                for(i=0; i<inMerge.Leaves.length; i++)
+                {
+                    item = inMerge.Leaves[i];
+                    obj[item.Key] = item.Value;
+                }
+                for(i=0; i<inMerge.Branches.length; i++)
+                {
+                    array = [];
+                    item = inMerge.Branches[i];
+                    for(j=0; j<item.Value.length; j++)
+                    {
+                        array.push( Split(item.Value[j]) );
+                    }
+                    obj[item.Key] = array;
+                }
+                return obj;
+            }
+            var merge = Merge(Model, Schema, "Root");
+            var split = Split(merge);
+            console.log(merge, split);
+        </script>
     </head>
     <body>
         <div id="App">
-            <div v-for="source in API.Sources">
-                <tps-source :source="source"/>
-            </div>
         </div>
     </body>
-
-    <!-- source -->
-    <script>
-        Vue.component("tps-source", {
-            delimiters: ['${', '}'],
-            props:['source'],
-            data: function()
-            {
-                return {
-                    Edit:false,
-                    Copy:{},
-                    Temp:{
-                        Constraint:'',
-                        Column:{column_name:'Trans. Date', path:'{Trans. Date}', type:'date'}
-                    }
-                };
-            },
-            methods:
-            {
-                EditStart: function()
-                {
-                    this.Edit = true;
-                    this.Copy = JSON.parse(JSON.stringify(this.source));
-                },
-                EditCancel: function()
-                {
-                    this.Edit = false;
-                },
-                ConstraintRemove: function(inIndex)
-                {
-                    this.Copy.constraint.splice(inIndex, 1);
-                },
-                ConstraintAdd: function()
-                {
-                    this.Copy.constraint.push(this.Temp.Constraint);
-                    this.Temp.Constraint = '';
-                }
-            },
-            computed:
-            {
-
-            },
-            mounted:function()
-            {
-
-            },
-            template:"#TemplateSource"
-        });
-    </script>
-    <script id="TemplateSource" type="text/x-template">
-        <div class="Source">
-            <dl v-show="!Edit">
-                <dt v-html="source.name"></dt>
-                <dd><strong>Loading Function: </strong><span v-html="source.loading_function"></span></dd>
-                <dd><strong>Source: </strong><span v-html="source.source"></span></dd>
-                <dd><strong>Contsraints: </strong><span v-html="source.constraint.join(' ')"></span></dd>
-                <dd><strong>Schemas: </strong><span v-html=""></span></dd>
-                <dd><button v-on:click="EditStart">Edit</button></dd>
-            </dl>
-            <dl v-show="Edit">
-                <dd><input v-model="Copy.name"/></dd>
-                
-                <dd>
-                    <strong>Loading Function:</strong>
-                    <select v-model="Copy.loading_function">
-                        <option disabled>${Copy.loading_function}</option>
-                        <option>CSV</option>
-                        <option>JSON</option>
-                        <option>XML</option>
-                    </select>
-                </dd>
-                <dd>
-                    <strong>Constraint:</strong>
-                    <ul>
-                        <li v-for="(item, index) in Copy.constraint">${item} <button v-on:click="ConstraintRemove(index)">-</button></li>
-                        <li>
-                            <input type="text" v-model="Temp.Constraint"/>
-                            <button v-on:click="ConstraintAdd">+</button>
-                        </li>
-                    </ul>
-                </dd>
-                <dd>
-                    <strong>Schemas:</strong>
-                    <ul>
-                        <li v-for="(value, key) in Copy.schemas">
-                            ${key}
-                            <table cellborder="1">
-                                <tr>
-                                    <th v-for="(sValue, sKey) in value">
-                                        <strong>${sValue.column_name}</strong><br/>
-                                        <em>${sValue.type}</em>
-                                    </th>
-                                    <th>
-                                        <input v-model="Temp.Column.column_name" type="text"/>
-                                        <select>
-                                            <option disabled>${Temp.Column.type}</option>
-                                            <option>date</option>
-                                            <option>numeric</option>
-                                            <option>text</option>
-                                        </select>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <td v-for="(sValue, sKey) in value">
-                                        ${sValue.path}
-                                    </td>
-                                </tr>
-                            </table>
-                        </li>
-                    </ul>
-                </dd>
-                <dd><button v-on:click="EditCancel">Cancel</button></dd>
-            </dl>
-        </div>
-    </script>
-
-    <!-- application -->
-    <script>
-        var App = new Vue({
-            delimiters: ['${', '}'],
-            el:"#App",
-            data:{
-                API:{
-                    Domain:'//localhost:80',
-                    RequestLog:[],
-                    Sources:[]
-                }
-            },
-            methods:{
-                CORS: function(message, url, verb, success)
-                {
-                    var context = this;
-                    var log = {
-                        ID:Math.random(),
-                        Message:message
-                    };
-                    context.API.RequestLog.push(log);
-
-                    var xhr = new XMLHttpRequest();
-                    if (!('withCredentials' in xhr)) xhr = new XDomainRequest(); // fix IE8/9
-                    xhr.open(verb, url);
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.onload = function(request){
-                        
-                        var i;
-                        for(i=0; i<context.API.RequestLog.length; i++)
-                        {
-                            if(context.API.RequestLog[i].ID == log.ID)
-                            {
-                                context.API.RequestLog.splice(i, 1);
-                            }
-                        }
-
-                        var response = request.currentTarget.response || request.target.responseText;
-                        console.log(JSON.parse(response));
-                        success.call(context, response);
-                    };
-                    xhr.send();
-                    return xhr;
-                },
-                UpdateSource: function()
-                {
-                    this.CORS("Loading Sources", this.API.Domain+'/source', "GET", function(inResponse)
-                    {
-                        this.API.Sources = JSON.parse(inResponse).source_list;
-                    });
-                }
-            },
-            mounted:function()
-            {
-                this.UpdateSource();
-            }
-        });
-    </script>
 </html>
