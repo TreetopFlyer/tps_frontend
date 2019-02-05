@@ -3,8 +3,10 @@ export const Merge = (inModel, inSchema, inPattern)=>
 {
     var i;
     var output, property;
-    var pattern;
-    var patternKey, patternValue, modelValue;
+    var pattern, patternKey, patternValue, modelValue;
+    var replacement;
+    var childPattern, childPatternKey, childPatternValue;
+
 
     pattern = inSchema[inPattern];
     output = {
@@ -44,27 +46,33 @@ export const Merge = (inModel, inSchema, inPattern)=>
         patternValue = pattern[patternKey];
         modelValue = inModel[patternKey]||patternValue.default||"-NA-";
 
-        property = {
-            Key:patternKey,
-            Value:modelValue,
-            Annotation:patternValue
-        };
+        property = { Key:patternKey, Value:modelValue, Annotation:patternValue, Copy:"" };
 
-        if(patternValue.type === "array")
+        if(patternValue.type !== "array")
         {
-            var replacement = [];
-            //replace the array of objects inValue with an array of merged objects
+            output.Leaves.push(property);
+        }
+        else
+        {
+            //do a merge the child objects in this branch
+            replacement = [];
             for(i=0; i<modelValue.length; i++)
             {
                 replacement.push( Merge(modelValue[i], inSchema, patternValue.settings) );
             }
             property.Value = replacement;
+            property.Copy = {};
+            childPattern = inSchema[patternValue.settings];
+            
+            for(childPatternKey in childPattern)
+            {
+                childPatternValue = childPattern[childPatternKey];
+                property.Copy[childPatternKey] = childPatternValue.default;
+            }
+            property.Copy = Merge(property.Copy, inSchema, patternValue.settings);
             output.Branches.push(property);
         }
-        else
-        {
-            output.Leaves.push(property);
-        }
+
     }
     return output;
 };

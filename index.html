@@ -49,6 +49,8 @@
             var merge = Merge(Model, Schema, "Root");
             var split = Split(merge);
             
+            console.log(merge);
+
             let _Node = (inMerged) =>
             {
                 if(inMerged.State.Edit)
