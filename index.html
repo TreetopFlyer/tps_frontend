@@ -15,8 +15,7 @@
 
         <!-- model/schema -->
         <script type="module">
-            import {html, render} from "https://unpkg.com/lit-html?module";
-            import {Split, Merge, Methods} from "./schemer.js";
+            import {App} from "./manipulator.js";
 
             var Model = {
                 sources:[
@@ -49,66 +48,6 @@
                     name:{type:"string", default:"new column", display:"Column"},
                     type:{type:"enum", default:"text", display:"Type", settings:["text", "date", "number", "boolean"]}
                 }
-            };
-
-            const App = (inModel, inSchema, inPattern, inRoot) =>
-            {
-                var merge = Merge(inModel, inSchema, inPattern);
-                var _Node = (inMerged) =>
-                {
-                    if(inMerged.State.Edit)
-                    {
-                        return html`
-                        <form class="Node" @submit=${(inEvent)=>{inEvent.preventDefault();}}>
-                            ${inMerged.Leaves.map( (inItem)=>
-                            {
-                                return html`
-                                <div class="Leaf">
-                                    ${inItem.Key}: <input type="text" value=${inItem.Copy} @input=${(inEvent)=>{inItem.Copy = inEvent.target.value;}}/>
-                                </div>
-                                `;
-                            }) }
-                            <button @click=${() => methods.EditSave(inMerged)}>OK</button>
-                            <button @click=${() => methods.EditCancel(inMerged)}>Cancel</button>
-                        </form>
-                        `;
-                    }
-                    else
-                    {
-                        return html`
-                        <div class="Node">
-                            ${inMerged.Leaves.map( (inItem)=>
-                            {
-                                return html`
-                                <div class="Leaf">
-                                    ${inItem.Key}: ${inItem.Value}
-                                </div>
-                                `;
-                            }) }
-                            <button @click=${() => methods.EditStart(inMerged)}>Edit</button>
-                            ${inMerged.Branches.map( (inItem)=>
-                            {
-                                return html`
-                                <div class="Branch">
-                                    ${inItem.Key}:
-                                    <button @click=${() => methods.BranchAdd(inItem)}>Add</button>
-                                    ${inItem.Value.map( (inMember)=>
-                                    {
-                                        return _Node(inMember);
-                                    } )}
-                                </div>
-                                `;
-                            })}
-                        </div>
-                        `;
-                    }
-                }
-                var Redraw = () =>
-                {
-                    render(_Node(merge), inRoot);
-                }
-                var methods = Methods(Redraw);
-                Redraw();
             };
 
             App(Model, Schema, "Sources", document.querySelector("#App"));
