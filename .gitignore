@@ -1,3 +1,4 @@
 _site/*
 *.log
 log.*
+node_modules/*
