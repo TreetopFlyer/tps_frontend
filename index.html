@@ -16,7 +16,7 @@
         <!-- model/schema -->
         <script type="module">
             import {html, render} from "https://unpkg.com/lit-html?module";
-            import {Split, Merge} from "./schemer.js";
+            import {Split, Merge, Methods} from "./schemer.js";
 
             var Model = {
                 sources:[
@@ -51,12 +51,7 @@
                 }
             };
 
-            var merge = Merge(Model, Schema, "Sources");
-            var split = Split(merge);
-            
-            console.log(merge);
-
-            let _Node = (inMerged) =>
+            const _Node = (inMerged) =>
             {
                 if(inMerged.State.Edit)
                 {
@@ -70,8 +65,8 @@
                             </div>
                             `;
                         }) }
-                        <button @click=${() => inMerged.Methods.EditSave()}>OK</button>
-                        <button @click=${() => inMerged.Methods.EditCancel()}>Cancel</button>
+                        <button @click=${() => methods.EditSave(inMerged)}>OK</button>
+                        <button @click=${() => methods.EditCancel(inMerged)}>Cancel</button>
                     </form>
                     `;
                 }
@@ -87,12 +82,13 @@
                             </div>
                             `;
                         }) }
-                        <button @click=${() => inMerged.Methods.EditStart()}>Edit</button>
+                        <button @click=${() => methods.EditStart(inMerged)}>Edit</button>
                         ${inMerged.Branches.map( (inItem)=>
                         {
                             return html`
                             <div class="Branch">
                                 ${inItem.Key}:
+                                <button @click=${() => methods.BranchAdd(inItem)}>Add</button>
                                 ${inItem.Value.map( (inMember)=>
                                 {
                                     return _Node(inMember);
@@ -104,11 +100,17 @@
                     `;
                 }
             }
-            let Redraw = () =>
+            const Redraw = () =>
             {
                 render(_Node(merge), document.querySelector("#App"));
             }
-            setInterval(Redraw, 500);
+
+            var merge = Merge(Model, Schema, "Sources");
+            var methods = Methods(Redraw);
+
+            Redraw();
+
+
         </script>
     </body>
 </html>

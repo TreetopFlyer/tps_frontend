@@ -22,30 +22,6 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
         State:{
             Edit:false,
             Collapsed:false,
-        },
-        Methods:{
-            EditStart:()=>
-            {
-                var i;
-                output.State.Edit = true;
-                for(i=0; i<output.Leaves.length; i++)
-                {
-                    output.Leaves[i].Copy = output.Leaves[i].Value;
-                }
-            },
-            EditCancel:()=>
-            {
-                output.State.Edit = false;
-            },
-            EditSave:()=>
-            {
-                var i;
-                output.State.Edit = false;
-                for(i=0; i<output.Leaves.length; i++)
-                {
-                    output.Leaves[i].Value = output.Leaves[i].Copy;
-                }
-            }
         }
     };
     for(patternKey in pattern)
@@ -78,7 +54,7 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
             }
             property.Value = replacement;
 
-            // Copy will be an object derived from defaults mentioned in the "settings" pattern. This derived object is then merged with that pattern.
+            // Copy will be set to an object derived from defaults mentioned in the "settings" pattern. This derived object is then merged with that pattern.
             replacement = {};
             childPattern = inSchema[patternValue.settings];
             for(childPatternKey in childPattern)
@@ -118,4 +94,45 @@ export const Split = (inMerge)=>
         obj[item.Key] = array;
     }
     return obj;
+};
+
+export const Methods = (inUpdate) => 
+{
+    return {
+        EditStart:(inNode)=>
+        {
+            var i;
+            inNode.State.Edit = true;
+            for(i=0; i<inNode.Leaves.length; i++)
+            {
+                inNode.Leaves[i].Copy = inNode.Leaves[i].Value;
+            }
+            inUpdate();
+        },
+        EditCancel:(inNode)=>
+        {
+            inNode.State.Edit = false;
+            inUpdate();
+        },
+        EditSave:(inNode)=>
+        {
+            var i;
+            inNode.State.Edit = false;
+            for(i=0; i<inNode.Leaves.length; i++)
+            {
+                inNode.Leaves[i].Value = inNode.Leaves[i].Copy;
+            }
+            inUpdate();
+        },
+        BranchAdd:(inBranch)=>
+        {
+            inBranch.Value.unshift( JSON.parse(JSON.stringify(inBranch.Copy)) );
+            inUpdate();
+        },
+        BranchDelete:(inBranch, inIndex)=>
+        {
+            inBranch.Value.splice(inIndex, 1);
+            inUpdate();
+        }
+    }
 };
