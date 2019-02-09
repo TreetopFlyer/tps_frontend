@@ -16,18 +16,23 @@
         <!-- model/schema -->
         <script type="module">
             import {html, render} from "https://unpkg.com/lit-html?module";
-            import {Split, Merge} from "./schemer.mjs";
+            import {Split, Merge} from "./schemer.js";
 
             var Model = {
                 sources:[
                     {
                         name:"Source1",
-                        type:"xml"
+                        type:"xml",
+                        layouts:[
+                            {
+                                name:"seth"
+                            }
+                        ]
                     }
                 ]
             };
             var Schema = {
-                Root:{
+                Sources:{
                     client:{type:"string", default:"default client"},
                     sources:{type:"array", settings:"Source"}
                 },
@@ -46,7 +51,7 @@
                 }
             };
 
-            var merge = Merge(Model, Schema, "Root");
+            var merge = Merge(Model, Schema, "Sources");
             var split = Split(merge);
             
             console.log(merge);
@@ -87,7 +92,8 @@
                         {
                             return html`
                             <div class="Branch">
-                                ${inItem.Key}: ${inItem.Value.map( (inMember)=>
+                                ${inItem.Key}:
+                                ${inItem.Value.map( (inMember)=>
                                 {
                                     return _Node(inMember);
                                 } )}
