@@ -76,11 +76,11 @@ const _Layout = () =>
         <h3>History</h3>
         ${_History()}
         <h3>Editor</h3>
-        ${_Node(AppModel)}
+        ${_Node(AppModel, [])}
     </div>
     `;
 }
-const _Node = (inMerged) =>
+const _Node = (inMerged, inPath) =>
 {
     if(inMerged.State.Edit)
     {
@@ -112,15 +112,15 @@ const _Node = (inMerged) =>
                 `;
             }) }
             <button @click=${() => Methods.EditStart(inMerged)}>Edit</button>
-            ${inMerged.Branches.map( (inItem)=>
+            ${inMerged.Branches.map( (inBranch, inBranchIndex)=>
             {
                 return html`
                 <div class="Branch">
-                    ${inItem.Key}:
-                    <button @click=${() => Methods.BranchAdd(inItem)}>Add</button>
-                    ${inItem.Value.map( (inMember)=>
+                    ${inBranch.Key}:
+                    <button @click=${() => Methods.BranchAdd(inBranch)}>Add</button>
+                    ${inBranch.Value.map( (inMember, inMemberIndex)=>
                     {
-                        return _Node(inMember);
+                        return _Node(inMember, inPath.concat([inBranchIndex, inMemberIndex]));
                     } )}
                 </div>
                 `;
