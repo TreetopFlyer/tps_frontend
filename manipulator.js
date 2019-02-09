@@ -4,16 +4,28 @@ import {Split, Merge} from "./schemer.js";
 const History = {};
 History.Stack = [];
 History.Index = 0;
-History.Push = (inName, inObject) =>
+History.Push = (inName) =>
 {
+    if(History.Index != History.Stack.length)
+    {
+        // we are viewing a past edit. cut the end off before adding the changes
+        History.Stack.splice(History.Index+1);
+    }
     History.Stack.push({
         Type:inName,
-        State:JSON.stringify(inObject)
+        State:JSON.stringify(AppModel)
     });
+    if(History.Stack.length > 10)
+    {
+        History.Stack.shift();
+    }
+    History.Index = History.Stack.length-1;
 };
 History.Recall = (inIndex) =>
 {
-
+    History.Index = inIndex;
+    AppModel = JSON.parse(History.Stack[inIndex].State);
+    AppUpdate();
 };
 
 const Methods = {
@@ -40,20 +52,34 @@ const Methods = {
         {
             inNode.Leaves[i].Value = inNode.Leaves[i].Copy;
         }
+        History.Push("Edit");
         AppUpdate();
     },
     BranchAdd:(inBranch)=>
     {
         inBranch.Value.unshift( JSON.parse(JSON.stringify(inBranch.Copy)) );
+        History.Push("Create");
         AppUpdate();
     },
     BranchDelete:(inBranch, inIndex)=>
     {
         inBranch.Value.splice(inIndex, 1);
+        History.Push("Delete");
         AppUpdate();
     }
 };
 
+const _Layout = () =>
+{
+    return html`
+    <div>
+        <h3>History</h3>
+        ${_History()}
+        <h3>Editor</h3>
+        ${_Node(AppModel)}
+    </div>
+    `;
+}
 const _Node = (inMerged) =>
 {
     if(inMerged.State.Edit)
@@ -103,9 +129,21 @@ const _Node = (inMerged) =>
         `;
     }
 };
+const _History = () =>
+{
+    return html`
+    <ul>
+        ${History.Stack.map( (inItem, inIndex)=>{
+            return html`
+            <li @click=${ ()=>{console.log(inIndex); History.Recall(inIndex);} }>${inItem.Type}</li>
+            `;
+        } )}
+    </ul>
+    `;
+};
 const AppUpdate = () =>
 {
-    render(_Node(AppModel), AppRoot);
+    render(_Layout(), AppRoot);
 };
 
 var AppModel;
