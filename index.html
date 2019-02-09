@@ -51,65 +51,67 @@
                 }
             };
 
-            const _Node = (inMerged) =>
+            const App = (inModel, inSchema, inPattern, inRoot) =>
             {
-                if(inMerged.State.Edit)
+                var merge = Merge(inModel, inSchema, inPattern);
+                var _Node = (inMerged) =>
                 {
-                    return html`
-                    <form class="Node" @submit=${(inEvent)=>{inEvent.preventDefault();}}>
-                        ${inMerged.Leaves.map( (inItem)=>
-                        {
-                            return html`
-                            <div class="Leaf">
-                                ${inItem.Key}: <input type="text" value=${inItem.Copy} @input=${(inEvent)=>{inItem.Copy = inEvent.target.value;}}/>
-                            </div>
-                            `;
-                        }) }
-                        <button @click=${() => methods.EditSave(inMerged)}>OK</button>
-                        <button @click=${() => methods.EditCancel(inMerged)}>Cancel</button>
-                    </form>
-                    `;
+                    if(inMerged.State.Edit)
+                    {
+                        return html`
+                        <form class="Node" @submit=${(inEvent)=>{inEvent.preventDefault();}}>
+                            ${inMerged.Leaves.map( (inItem)=>
+                            {
+                                return html`
+                                <div class="Leaf">
+                                    ${inItem.Key}: <input type="text" value=${inItem.Copy} @input=${(inEvent)=>{inItem.Copy = inEvent.target.value;}}/>
+                                </div>
+                                `;
+                            }) }
+                            <button @click=${() => methods.EditSave(inMerged)}>OK</button>
+                            <button @click=${() => methods.EditCancel(inMerged)}>Cancel</button>
+                        </form>
+                        `;
+                    }
+                    else
+                    {
+                        return html`
+                        <div class="Node">
+                            ${inMerged.Leaves.map( (inItem)=>
+                            {
+                                return html`
+                                <div class="Leaf">
+                                    ${inItem.Key}: ${inItem.Value}
+                                </div>
+                                `;
+                            }) }
+                            <button @click=${() => methods.EditStart(inMerged)}>Edit</button>
+                            ${inMerged.Branches.map( (inItem)=>
+                            {
+                                return html`
+                                <div class="Branch">
+                                    ${inItem.Key}:
+                                    <button @click=${() => methods.BranchAdd(inItem)}>Add</button>
+                                    ${inItem.Value.map( (inMember)=>
+                                    {
+                                        return _Node(inMember);
+                                    } )}
+                                </div>
+                                `;
+                            })}
+                        </div>
+                        `;
+                    }
                 }
-                else
+                var Redraw = () =>
                 {
-                    return html`
-                    <div class="Node">
-                        ${inMerged.Leaves.map( (inItem)=>
-                        {
-                            return html`
-                            <div class="Leaf">
-                                ${inItem.Key}: ${inItem.Value}
-                            </div>
-                            `;
-                        }) }
-                        <button @click=${() => methods.EditStart(inMerged)}>Edit</button>
-                        ${inMerged.Branches.map( (inItem)=>
-                        {
-                            return html`
-                            <div class="Branch">
-                                ${inItem.Key}:
-                                <button @click=${() => methods.BranchAdd(inItem)}>Add</button>
-                                ${inItem.Value.map( (inMember)=>
-                                {
-                                    return _Node(inMember);
-                                } )}
-                            </div>
-                            `;
-                        })}
-                    </div>
-                    `;
+                    render(_Node(merge), inRoot);
                 }
-            }
-            const Redraw = () =>
-            {
-                render(_Node(merge), document.querySelector("#App"));
-            }
+                var methods = Methods(Redraw);
+                Redraw();
+            };
 
-            var merge = Merge(Model, Schema, "Sources");
-            var methods = Methods(Redraw);
-
-            Redraw();
-
+            App(Model, Schema, "Sources", document.querySelector("#App"));
 
         </script>
     </body>
