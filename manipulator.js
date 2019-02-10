@@ -28,6 +28,46 @@ History.Recall = (inIndex) =>
     AppUpdate();
 };
 
+const AppStore = {};
+AppStore.Dispatch = (inType, inPath) =>
+{
+     switch(inType)
+     {
+        case "Edit Start" :
+
+            break;
+        case "Edit Cancel" :
+            break;
+        case "EditSave" :
+            break;
+        case "ArrayAdd" :
+            break;
+        case "ArrayDelete" :
+            break;
+        case "ArrayDuplicate" :
+            break;
+     }
+};
+
+const ResolvePath = (inPath) =>
+{
+    var i;
+    var output;
+    output = {};
+    output.Node = AppModel;
+    output.Array = output.Node.Branches[inPath[0]];
+    output.Member = output.Array.Value[inPath[1]];
+    for(i=2; i<inPath.length; i+=2)
+    {
+        output.Node = output.Member;
+        output.Array = output.Member.Branches[inPath[i]];
+        output.Member = output.Array.Value[inPath[i+1]];
+    }
+    output.ArrayIndex = inPath[inPath.length-2];
+    output.MemberIndex = inPath[inPath.length-1];
+    return output;
+};
+
 const Methods = {
     EditStart:(inNode)=>
     {
@@ -55,19 +95,25 @@ const Methods = {
         History.Push("Edit");
         AppUpdate();
     },
-    BranchAdd:(inBranch)=>
+    BranchAdd:(inPath)=>
     {
-        inBranch.Value.unshift( JSON.parse(JSON.stringify(inBranch.Copy)) );
+        var location;
+        location = ResolvePath(inPath);
+        console.log(location);
+        location.Array.Value.unshift( JSON.parse(JSON.stringify(location.Array.Copy)) );
         History.Push("Create");
         AppUpdate();
     },
-    BranchDelete:(inBranch, inIndex)=>
+    BranchDelete:(inPath)=>
     {
-        inBranch.Value.splice(inIndex, 1);
+        var location;
+        location = ResolvePath(inPath);
+        location.Array.Value.splice(location.MemberIndex, 1);
         History.Push("Delete");
         AppUpdate();
     }
 };
+
 
 const _Layout = () =>
 {
@@ -103,6 +149,19 @@ const _Node = (inMerged, inPath) =>
     {
         return html`
         <div class="Node">
+            <div>
+            ${inPath.map( (inNumber, inIndex)=>{
+
+                if(inIndex % 2 === 0)
+                {
+                    return ">"+inNumber+".";
+                }
+                else
+                {
+                    return inNumber+" ";
+                }
+            } )}
+            </div>
             ${inMerged.Leaves.map( (inItem)=>
             {
                 return html`
@@ -112,15 +171,19 @@ const _Node = (inMerged, inPath) =>
                 `;
             }) }
             <button @click=${() => Methods.EditStart(inMerged)}>Edit</button>
+            <button @click=${() => Methods.BranchDelete(inPath)}>Delete</button>
             ${inMerged.Branches.map( (inBranch, inBranchIndex)=>
             {
+                var pathExtended;
+                pathExtended = inPath.concat([inBranchIndex]);
                 return html`
                 <div class="Branch">
                     ${inBranch.Key}:
-                    <button @click=${() => Methods.BranchAdd(inBranch)}>Add</button>
+                    <button @click=${() => Methods.BranchAdd(pathExtended)}>Add</button>
                     ${inBranch.Value.map( (inMember, inMemberIndex)=>
                     {
-                        return _Node(inMember, inPath.concat([inBranchIndex, inMemberIndex]));
+                        pathExtended.concat[inMemberIndex];
+                        return _Node(inMember, pathExtended);
                     } )}
                 </div>
                 `;
