@@ -13,7 +13,7 @@ History.Push = (inName) =>
     }
     History.Stack.push({
         Type:inName,
-        State:JSON.stringify(AppModel)
+        State:JSON.stringify(Model)
     });
     if(History.Stack.length > 10)
     {
@@ -24,29 +24,8 @@ History.Push = (inName) =>
 History.Recall = (inIndex) =>
 {
     History.Index = inIndex;
-    AppModel = JSON.parse(History.Stack[inIndex].State);
+    Model = JSON.parse(History.Stack[inIndex].State);
     AppUpdate();
-};
-
-const AppStore = {};
-AppStore.Dispatch = (inType, inPath) =>
-{
-     switch(inType)
-     {
-        case "Edit Start" :
-
-            break;
-        case "Edit Cancel" :
-            break;
-        case "EditSave" :
-            break;
-        case "ArrayAdd" :
-            break;
-        case "ArrayDelete" :
-            break;
-        case "ArrayDuplicate" :
-            break;
-     }
 };
 
 const ResolvePath = (inPath) =>
@@ -57,7 +36,7 @@ const ResolvePath = (inPath) =>
     output = {
         Branch:false,
         BranchIndex:false,
-        Node:AppModel,
+        Node:Model,
         NodeIndex:false
     };
     for(i=0; i<inPath.length; i++)
@@ -126,6 +105,14 @@ const Methods = {
     }
 };
 
+var Model;
+var Root;
+var Selection;
+
+const AppUpdate = () =>
+{
+    render(_Layout(), Root);
+};
 
 const _Layout = () =>
 {
@@ -134,7 +121,7 @@ const _Layout = () =>
         <h3>History</h3>
         ${_History()}
         <h3>Editor</h3>
-        ${_Node(AppModel, [])}
+        ${_Node(Model, [])}
     </div>
     `;
 }
@@ -202,20 +189,14 @@ const _History = () =>
     </ul>
     `;
 };
-const AppUpdate = () =>
-{
-    render(_Layout(), AppRoot);
-};
 
-var AppModel;
-var AppRoot;
 
 export const App = (inModel, inSchema, inPattern, inRoot) =>
 {
-    AppModel = Merge(inModel, inSchema, inPattern);
-    AppRoot = inRoot;
+    Model = Merge(inModel, inSchema, inPattern);
+    Root = inRoot;
 
-    console.log(AppModel);
+    console.log(Model);
     History.Push("Init");
     AppUpdate();
 };

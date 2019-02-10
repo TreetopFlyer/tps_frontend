@@ -1,4 +1,3 @@
-
 export const Merge = (inModel, inSchema, inPatternKey)=>
 {
     var i;
@@ -36,6 +35,8 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
             Copy: "",
             Annotation: patternValue
         };
+
+        
 
         if(patternValue.type !== "array")
         {
