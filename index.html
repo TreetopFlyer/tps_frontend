@@ -22,6 +22,10 @@
                     {
                         name:"Source1",
                         type:"xml",
+                        things:{
+                            thing1:true,
+                            thing2:"a string"
+                        },
                         layouts:[
                             {
                                 name:"seth"
@@ -38,7 +42,14 @@
                 Source:{
                     name:{type:"string", default:"new source", display:"Source"},
                     type:{type:"enum", default:"xml", display:"Type", settings:["xml", "json", "csv"]},
-                    layouts:{type:"array", default:[{name:"Default Layout!"}], settings:"Layout"}
+                    layouts:{type:"array", default:[{name:"Default Layout!"}], settings:"Layout"},
+                    things:{type:"group", settings:{
+                        thing1:{type:"boolean"},
+                        thing2:{type:"string"},
+                    }}
+                },
+                Things:{
+
                 },
                 Layout:{
                     name:{type:"string", default:"new layout", display:"Layout"},

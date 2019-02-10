@@ -22,6 +22,7 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
         State:{
             Edit:false,
             Collapsed:false,
+            Selected:false,
         }
     };
     for(patternKey in pattern)

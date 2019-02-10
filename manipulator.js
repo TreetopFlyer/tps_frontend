@@ -52,19 +52,32 @@ AppStore.Dispatch = (inType, inPath) =>
 const ResolvePath = (inPath) =>
 {
     var i;
+    var step;
     var output;
-    output = {};
-    output.Node = AppModel;
-    output.Array = output.Node.Branches[inPath[0]];
-    output.Member = output.Array.Value[inPath[1]];
-    for(i=2; i<inPath.length; i+=2)
+    output = {
+        Branch:false,
+        BranchIndex:false,
+        Node:AppModel,
+        NodeIndex:false
+    };
+    for(i=0; i<inPath.length; i++)
     {
-        output.Node = output.Member;
-        output.Array = output.Member.Branches[inPath[i]];
-        output.Member = output.Array.Value[inPath[i+1]];
+        step = inPath[i];
+        if(i % 2 === 0)
+        {
+            //first
+            output.Branch = output.Node.Branches[step];
+            output.BranchIndex = step;
+            console.log(output.Branch);
+        }
+        else
+        {
+            //second
+            output.Node = output.Branch.Value[step];
+            output.NodeIndex = step;
+            console.log(output.Node);
+        }
     }
-    output.ArrayIndex = inPath[inPath.length-2];
-    output.MemberIndex = inPath[inPath.length-1];
     return output;
 };
 
@@ -99,8 +112,7 @@ const Methods = {
     {
         var location;
         location = ResolvePath(inPath);
-        console.log(location);
-        location.Array.Value.unshift( JSON.parse(JSON.stringify(location.Array.Copy)) );
+        location.Branch.Value.unshift( JSON.parse(JSON.stringify(location.Branch.Copy)) );
         History.Push("Create");
         AppUpdate();
     },
@@ -108,7 +120,7 @@ const Methods = {
     {
         var location;
         location = ResolvePath(inPath);
-        location.Array.Value.splice(location.MemberIndex, 1);
+        location.Branch.Value.splice(location.NodeIndex, 1);
         History.Push("Delete");
         AppUpdate();
     }
@@ -149,19 +161,6 @@ const _Node = (inMerged, inPath) =>
     {
         return html`
         <div class="Node">
-            <div>
-            ${inPath.map( (inNumber, inIndex)=>{
-
-                if(inIndex % 2 === 0)
-                {
-                    return ">"+inNumber+".";
-                }
-                else
-                {
-                    return inNumber+" ";
-                }
-            } )}
-            </div>
             ${inMerged.Leaves.map( (inItem)=>
             {
                 return html`
@@ -182,8 +181,7 @@ const _Node = (inMerged, inPath) =>
                     <button @click=${() => Methods.BranchAdd(pathExtended)}>Add</button>
                     ${inBranch.Value.map( (inMember, inMemberIndex)=>
                     {
-                        pathExtended.concat[inMemberIndex];
-                        return _Node(inMember, pathExtended);
+                        return _Node(inMember, pathExtended.concat([inMemberIndex]));
                     } )}
                 </div>
                 `;
@@ -218,6 +216,7 @@ export const App = (inModel, inSchema, inPattern, inRoot) =>
     AppRoot = inRoot;
 
     console.log(AppModel);
+    History.Push("Init");
     AppUpdate();
 };
 
