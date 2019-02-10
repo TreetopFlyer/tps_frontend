@@ -47,14 +47,12 @@ const ResolvePath = (inPath) =>
             //first
             output.Branch = output.Node.Branches[step];
             output.BranchIndex = step;
-            console.log(output.Branch);
         }
         else
         {
             //second
             output.Node = output.Branch.Value[step];
             output.NodeIndex = step;
-            console.log(output.Node);
         }
     }
     return output;
@@ -183,7 +181,7 @@ const _History = () =>
     <ul>
         ${History.Stack.map( (inItem, inIndex)=>{
             return html`
-            <li @click=${ ()=>{console.log(inIndex); History.Recall(inIndex);} }>${inItem.Type}</li>
+            <li @click=${ ()=>{History.Recall(inIndex);} }>${inItem.Type}</li>
             `;
         } )}
     </ul>
@@ -196,7 +194,7 @@ export const App = (inModel, inSchema, inPattern, inRoot) =>
     Model = Merge(inModel, inSchema, inPattern);
     Root = inRoot;
 
-    console.log(Model);
+    console.log("App model:", Model);
     History.Push("Init");
     AppUpdate();
 };

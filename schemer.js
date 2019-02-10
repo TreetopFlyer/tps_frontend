@@ -1,8 +1,8 @@
-export const Merge = (inModel, inSchema, inPatternKey)=>
+export const Merge = (inModel, inSchema, inPattern)=>
 {
     var i;
     var output, property;
-    var pattern, patternKey, patternValue, modelValue;
+    var patternKey, patternValue, modelValue;
     var replacement;
     var childPattern, childPatternKey, childPatternValue;
 
@@ -14,7 +14,6 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
     // - Copy : a local storage that is used in editing leaf fields, or to store an object that can be copied into branch fields array.
     // - Annotation: a reference to the pattern field used in the comparison.
 
-    pattern = inSchema[inPatternKey];
     output = {
         Leaves:[],
         Branches:[],
@@ -24,50 +23,66 @@ export const Merge = (inModel, inSchema, inPatternKey)=>
             Selected:false,
         }
     };
-    for(patternKey in pattern)
+    for(patternKey in inPattern)
     {
-        patternValue = pattern[patternKey];
+        patternValue = inPattern[patternKey];
         modelValue = inModel[patternKey]||patternValue.default||"-NA-";
-
+        
         property = {
-            Key: patternKey, 
-            Value: modelValue,
+            Key: patternValue.display||patternKey, 
+            Value: modelValue||patternValue.default,
             Copy: "",
             Annotation: patternValue
         };
 
-        
+        // flatten group objects
+        if(patternValue.type === "group")
+        {
+            var drillDown = Merge(property.Value, inSchema, patternValue.settings);
+            var rename = (inItem) =>{inItem.Key = property.Key + "." + inItem.Key;};
+            drillDown.Leaves.forEach((inItem)=>{
+                rename(inItem);
+                output.Leaves.push(inItem);
+            });
+            drillDown.Branches.forEach((inItem)=>{
+                rename(inItem);
+                output.Branches.push(inItem);
+            });
 
-        if(patternValue.type !== "array")
-        {
-            // if its a leaf field, we don't have to do anything to the property object. just add it to Leaves.
-            output.Leaves.push(property);
+            output.Leaves.concat(drillDown.Leaves);
+            output.Branches.concat(drillDown.Branches);
+            continue;
         }
-        else
+
+        // if its a branch field, we have to modify the Value and Copy properties.
+        // branch fields require a "settings" property that is a reference to the pattern that should be used on its children
+        if(patternValue.type === "array")
         {
-            // if its a branch field, we have to modify the Value and Copy properties.
-            // branch fields require a "settings" property that is a reference to the pattern that should be used on its children
+            childPattern = inSchema[patternValue.settings];
 
             // Value will be replaced with an array that is the result of the original objects merged with the "settings" pattern
             replacement = [];
             for(i=0; i<modelValue.length; i++)
             {
-                replacement.push( Merge(modelValue[i], inSchema, patternValue.settings) );
+                replacement.push( Merge(property.Value[i], inSchema, childPattern) );
             }
             property.Value = replacement;
 
             // Copy will be set to an object derived from defaults mentioned in the "settings" pattern. This derived object is then merged with that pattern.
             replacement = {};
-            childPattern = inSchema[patternValue.settings];
             for(childPatternKey in childPattern)
             {
                 childPatternValue = childPattern[childPatternKey];
                 replacement[childPatternKey] = childPatternValue.default;
             }
-            property.Copy = Merge(replacement, inSchema, patternValue.settings);
+            property.Copy = Merge(replacement, inSchema, childPattern);
 
             output.Branches.push(property);
+            continue;
         }
+
+        // if its a leaf field, we don't have to do anything to the property object. just add it to Leaves.
+        output.Leaves.push(property);
 
     }
     return output;
